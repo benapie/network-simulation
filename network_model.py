@@ -154,6 +154,13 @@ class Router:
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
+        to_remove = []
+        for node in self.to:
+            if self.to[node] == dv_packet.from_addr and node not in dv_packet.data["CONTENT"]:
+                to_remove.append(node)
+        for node in to_remove:
+            self.to.pop(node)
+            self.distances.pop(node)
         for node in dv_packet.data["CONTENT"]:
             if node not in self.distances:
                 self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
@@ -174,6 +181,8 @@ class Router:
         if packet.to_addr == self.address:
             if packet.data["HEAD"] == "DV":
                 self.update_distance_vector(packet)  # accept DV packet as something to process independently
+            elif packet.data["HEAD"] == "DEL":
+                self.distances.pop(packet.from_addr)
             else:
                 self.transport_receive(packet)
         else:
@@ -188,6 +197,12 @@ class Router:
             self.distances[router.address] = edge.ticks_for_data_passthrough
             self.to[router.address] = router.address
         self.send_distance_vector()
+
+    def send_del(self):
+        """Sends a delete packet to neighbours"""
+        for neighbour in self.neighbours:
+            self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys"})
+
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
@@ -207,6 +222,14 @@ class Network:
     def __init__(self, routers: List[Router] = None):
         self.routers = routers
         self.edges = []
+
+    def delete_router(self, addr: str):
+        """Deletes a router"""
+        for i in range(len(self.routers)):
+            if self.routers[i].address == addr:
+                self.routers[i].send_del()
+                self.routers.pop(i)
+                break
 
     def link_to(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
         """Links two routers together,

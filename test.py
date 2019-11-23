@@ -1,5 +1,6 @@
 from network_model import *
 import logging
+import time
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -17,9 +18,11 @@ for _ in range(10):
     for _ in range(100):
         network.network_tick()
 
-routers[3].transport_send("Hello, World!", "5")
+long_str = ""
+for i in range(333):
+    long_str += "xyza"
+
+routers[4].transport_send(long_str, "3")
 for i in range(500):
     #print("BEFORE TICK", i)
-    if i == 10:
-        network.link_to(routers[4], routers[5], 10)
     network.network_tick()
