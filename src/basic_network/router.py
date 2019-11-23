@@ -32,13 +32,13 @@ class Router:
         s_num = 0
         num_p = math.ceil(len(content)/255)
         while len(content) > 255:
-            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
+            self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
             content = content[255:]
             s_num += 1
         while len(content) < 255:
             content += "§"
         if len(content) != 0:
-            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
+            self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
     def application_send(self, data):
         pass
