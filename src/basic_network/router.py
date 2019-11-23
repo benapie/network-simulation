@@ -1,10 +1,9 @@
 from __future__ import annotations
-
 from src.basic_network.data_layer import DataLayer
 from src.basic_network.edge import Edge
 from src.basic_network.packet import Packet
 from typing import List, Dict
-
+import math
 
 class Router:
     neighbours: List[Router]
@@ -22,6 +21,27 @@ class Router:
         self.to = []
         self.data_layer = DataLayer()
         self.data_layer.set_router(self)
+        self.packet_queues = {}
+
+    def transport_send(self, content: str, to_addr: str):
+        """Splits the content into packets and sends them"""
+        # Each packet is of length 255 (§) is added to pad packets of length < 255
+        # Each packet has a sequence number S_NUM (for reconstruction)
+        # Each packet is sent with a NUM_P specifying the number of packets in content (for reconstruction)
+        content.replace("§", "\§")
+        s_num = 0
+        num_p = math.ceil(len(content)/255)
+        while len(content) > 255:
+            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
+            content = content[255:]
+            s_num += 1
+        while len(content) < 255:
+            content += "§"
+        if len(content) != 0:
+            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
+
+    def transport_receive(self, packet):
+        pass
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
