@@ -41,7 +41,7 @@ class Router:
             Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
     def transport_receive(self, packet):
-
+        pass
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
