@@ -19,15 +19,13 @@ class Edge:
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
         tick along, while also manging sending to the routers if they arrive."""
-        if self.a.router.address == "0" and self.b.router.address=="1":
-            print(self.data_in_transit)
-        for data, tar, ticks in list(self.data_in_transit):
-            if ticks - 1 == self.ticks_for_data_passthrough:
-                self.data_in_transit.remove((data, tar, self.ticks_for_data_passthrough - 1))
-                tar.accept_data(data, self)
         for i in range(len(self.data_in_transit)):
             self.data_in_transit[i] = (self.data_in_transit[i][0],
                                        self.data_in_transit[i][1], self.data_in_transit[i][2] + 1)
+        for data, tar, ticks in self.data_in_transit:
+            if ticks == self.ticks_for_data_passthrough:
+                tar.accept_data(data, self)
+        self.data_in_transit = [t for t in self.data_in_transit if t[2] < self.ticks_for_data_passthrough]
 
     def get_data_in_transit(self) -> List[Any, Device, int]:
         return self.data_in_transit
