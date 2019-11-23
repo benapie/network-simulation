@@ -11,3 +11,6 @@
     - Computer vision
         - Not viable (all hardware gone, 13:39)
     - Server
+
+- Fully formed ideas
+    - Virtual network
