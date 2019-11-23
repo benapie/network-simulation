@@ -1,30 +1,52 @@
 from __future__ import annotations
 from typing import List, Dict, Tuple, Any
 import math
+from random import Random
 
 
 class Edge:
-    data_in_transit: List[Tuple[Any, Device, int]]
+    a: Device
+    b: Device
+    ticks_for_data_passthrough: int
+    data_in_transit: List[Edge.TransitData]
+    main_rng: Random
+
+    class TransitData:
+        target: Device
+        ticks: int
+        prob_of_delay: int
+        rng: Random
+
+        def __init__(self, data, target: Device, prob_of_delay):
+            self.data = data
+            self.target = target
+            self.ticks = 0
+            self.prob_of_delay = prob_of_delay
+            self.rng = Random()
+
+        def tick(self):
+            if self.rng.randint(1, 100) > self.prob_of_delay:
+                self.ticks += 1
 
     def __init__(self, a: Device, b: Device, ticks_for_data_passthrough: int):
         self.a = a
         self.b = b
         self.ticks_for_data_passthrough = ticks_for_data_passthrough
         self.data_in_transit = []
+        self.main_rng = Random()
 
     def send_data_through(self, data, sender: Device):
-        self.data_in_transit.append((data, self.a if sender != self.a else self.b, 0))
+        prob_of_delay = self.main_rng.randint(0, 95)
+        self.data_in_transit.append(Edge.TransitData(data, self.a if sender != self.a else self.b, prob_of_delay))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
         tick along, while also manging sending to the routers if they arrive."""
-        for i in range(len(self.data_in_transit)):
-            self.data_in_transit[i] = (self.data_in_transit[i][0],
-                                       self.data_in_transit[i][1], self.data_in_transit[i][2] + 1)
-        for data, tar, ticks in self.data_in_transit:
-            if ticks == self.ticks_for_data_passthrough:
-                tar.accept_data(data, self)
-        self.data_in_transit = [t for t in self.data_in_transit if t[2] < self.ticks_for_data_passthrough]
+        for data in self.data_in_transit:
+            data.tick()
+            if data.ticks == self.ticks_for_data_passthrough:
+                data.target.accept_data(data.data, self)
+        self.data_in_transit = [d for d in self.data_in_transit if d.ticks < self.ticks_for_data_passthrough]
 
     def get_data_in_transit(self) -> List[Any, Device, int]:
         return self.data_in_transit
@@ -44,11 +66,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        print("Sending data", data, "to", target)
+        # print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        print("Received data", data, "from edge", src)
+        # print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
