@@ -1,5 +1,5 @@
-from router import Router
-from packet import Packet
+from src.basic_network.router import Router
+from src.basic_network.packet import Packet
 
 
 class Edge:

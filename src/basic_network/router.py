@@ -1,47 +1,83 @@
 from __future__ import annotations
-from src.basic_network.data_layer import DataLayer
-from src.basic_network.edge import Edge
 from src.basic_network.packet import Packet
 from typing import List, Dict
 import math
+import logging
+
+class Edge:
+    def __init__(self, a: Router, b: Router, ticks_per_packet: int):
+        self.a = a
+        self.b = b
+        self.ticks_per_packet = ticks_per_packet
+        self.packets = []
+
+    def send(self, p: Packet, target: Router):
+        self.packets.append((p, target, 0))
+
+    def tick(self):
+        """This will tick an edge along, moving every packet on the edge one
+        tick along, while also manging sending to the routers if they arrive."""
+        packets = ((p, tar) for (p, tar, ticks) in self.packets
+                   if (ticks == self.ticks_per_packet - 1))
+        for p, tar in packets:
+            self.packets.remove((p, self.ticks_per_packet - 1))
+            tar.recieve_packet(p)
+        for i in range(len(self.packets)):
+            self.packets[i] = (self.packets[i][0],
+                               self.packets[i][1], self.packets[i][2] + 1)
+
+class DataLayer:
+    edges: Dict[str, Edge]
+    router: Router
+
+    def __init__(self):
+        self.edges = {}
+
+    def set_router(self, r: Router):
+        self.router = r
+
+    def send_packet(self, p: Packet, target: str):
+        logging.debug("Sending Packet", p, "to", target)
+        if self.edges[target].a == self.router.address:
+            self.edges[target].a.receive_packet(p)
+        else:
+            self.edges[target].b.receive_packet(p)
+        #self.edges[target].send(p, target)
+
+    def accept_packet(self, p: Packet, src: Edge):
+        logging.debug("Received Packet", p, "from edge", src)
+        self.router.receive_packet(p)
 
 class Router:
-    neighbours: List[Router]
-    edges: List[Edge]
-    distances: Dict[str, int]
-    address: str
-    to: List[str]
-    data_layer: DataLayer
-
     def __init__(self, address: str):
         self.edges = []
         self.neighbours = []
         self.address = address
         self.distances = {self.address: 0}
-        self.to = []
+        self.to = {}
         self.data_layer = DataLayer()
         self.data_layer.set_router(self)
         self.packet_queues = {}
 
     def application_receive(self, data):
-        pass
+        print(data)
+        print(self.address)
 
     def transport_send(self, content: str, to_addr: str):
         """Splits the content into packets and sends them"""
         # Each packet is of length 255 (§) is added to pad packets of length < 255
         # Each packet has a sequence number S_NUM (for reconstruction)
         # Each packet is sent with a NUM_P specifying the number of packets in content (for reconstruction)
-        content.replace("§", "\§")
         s_num = 0
         num_p = math.ceil(len(content)/255)
         while len(content) > 255:
-            self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
+            self.send_data(to_addr, {"HEAD": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
             content = content[255:]
             s_num += 1
         while len(content) < 255:
             content += "§"
         if len(content) != 0:
-            self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
+            self.send_data(to_addr, {"HEAD": "DATA", "CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
     def transport_receive(self, packet):
         if packet.from_addr not in self.packet_queues:
@@ -49,7 +85,10 @@ class Router:
         else:
             self.packet_queues[packet.from_addr].append(packet.data)
         if len(self.packet_queues[packet.from_addr]) == packet.data["NUM_P"]:
-            self.application_receive(self.reconstruct_data(self.packet_queues[packet.from_addr]))
+            data = self.reconstruct_data(self.packet_queues[packet.from_addr])
+            while data[-1] == "§" and data[-2] != "\\":
+                data = data[:-1]
+            self.application_receive(data)
 
     def reconstruct_data(self, packets: []):
         packets.sort(key=lambda x: x["S_NUM"])
@@ -91,9 +130,8 @@ class Router:
 
     def update_dv(self, edge: Edge):
         other_router = edge.b if edge.b != self else edge.a
-        if edge.ticks_per_packet <= self.distances[other_router]:
-            self.distances[other_router.address] = edge.ticks_per_packet
-            self.to[other_router.address] = other_router.address
+        self.distances[other_router.address] = edge.ticks_per_packet
+        self.to[other_router.address] = other_router.address
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router, while also setting the connection speed.
@@ -106,6 +144,7 @@ class Router:
             Edge -- The Edge object created for this connection."""
         self.edges.append(edge)
         self.neighbours.append(router)
+        self.data_layer.edges[router.address] = edge
         self.update_dv(edge)
 
     def send_data(self, addr: str, data):
