@@ -30,6 +30,9 @@ class Edge:
     def get_data_in_transit(self) -> List[Any, Device, int]:
         return self.data_in_transit
 
+    def __str__(self):
+        return str(self.a) + " -> " + str(self.b)
+
 
 class Device:
     edges: Dict[str, Edge]
@@ -52,6 +55,9 @@ class Device:
     def add_edge(self, edge: Edge, address: str):
         self.edges[address] = edge
 
+    def __str__(self):
+        return "D#" + str(self.router)
+
 
 # Packet stands alone, should not be doing **anything** should just sit there and take it!
 class Packet:
@@ -59,6 +65,9 @@ class Packet:
         self.data = data
         self.from_addr = from_addr
         self.to_addr = to_addr
+
+    def __str__(self):
+        return str(self.data) + ", " + self.from_addr + " -> " + self.to_addr
 
 
 class Router:
@@ -160,7 +169,10 @@ class Router:
             addr {str} -- The address of the target.
             data -- The data to send."""
         p = Packet(data, self.address, addr)
-        self.device.send_data(p, self.where_to(p)) #
+        self.device.send_data(p, self.where_to(p))
+
+    def __str__(self):
+        return self.address
 
 
 class Network:
