@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 from typing import List, Dict, Tuple, Any
 import math
-
+import random
 
 class Edge:
     data_in_transit: List[Tuple[Any, Device, int]]
@@ -145,8 +145,7 @@ class Router:
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
         if packet.to_addr not in self.to:
-            # TODO: return random neighbour and set packet as lost
-            pass
+            return random.choice(list(self.to.values()))
         return self.to[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
