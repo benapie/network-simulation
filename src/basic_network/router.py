@@ -66,3 +66,6 @@ class Router:
             addr {str} -- The address of the target.
             packet {Packet} -- The packet to send."""
         raise NotImplementedError("test test")
+
+    def recieve_packet(self, packet: Packet):
+        raise NotImplementedError("test setsers")
