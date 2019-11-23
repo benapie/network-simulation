@@ -3,15 +3,16 @@ import math
 import random
 import time
 
+
 class Node:
     def __init__(self, label, x, y, r):
         self.label = label
         self.x = x
         self.y = y
         self.circle = Circle(Point(x, y), r)
-        self.circle.setFill("black")
         self.circle.setOutline("white")
-
+        self.color = color_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        self.circle.setFill(self.color)
 
 class Edge:
     def __init__(self, node_a, node_b):
@@ -97,17 +98,19 @@ class Visualisation:
             packet.square.undraw()
             self.packet_list.remove(packet)
 
-    def send_packet(self, node_a_label, node_b_label, frame_count):
+    def send_packet(self, node_a_label, node_b_label, frame_count, packet_label="1"):
         """ Visualises a packet going from node A to node B """
         # find the nodes
         node_a = self.network.get_node_by_label(node_a_label)
         node_b = self.network.get_node_by_label(node_b_label)
         packet = Packet(node_a.circle.getCenter().x,
-                                       node_a.circle.getCenter().y,
-                                       node_b.circle.getCenter().x,
-                                       node_b.circle.getCenter().y,
-                                       frame_count)
+                        node_a.circle.getCenter().y,
+                        node_b.circle.getCenter().x,
+                        node_b.circle.getCenter().y,
+                        frame_count,
+                        packet_label)
         packet.square.draw(self.window)
+
         self.packet_list.append(packet)
 
 
@@ -128,10 +131,10 @@ def circle_arrangement(r, x, y, node_label_list, edge_label_list):
     node_list = []
     for i in range(0, len(node_label_list)):
         theta = i * math.pi * 2 * math.pow(len(node_label_list), -1)
-        node_list.append(Node(node_label_list[i],         # label
-                         x + (r * math.cos(theta)),  # x coordinate
-                         y + (r * math.sin(theta)),  # y coordinate
-                          10))                        # radius
+        node_list.append(Node(node_label_list[i],  # label
+                              x + (r * math.cos(theta)),  # x coordinate
+                              y + (r * math.sin(theta)),  # y coordinate
+                              10))  # radius
     # Drawing edges
     edge_list = []
     for i in range(0, len(edge_label_list)):
@@ -167,7 +170,8 @@ def randomly_generate_network():
 
 
 class Packet:
-    def __init__(self, node_a_position_x, node_a_position_y, node_b_position_x, node_b_position_y, frame_count_max):
+    def __init__(self, node_a_position_x, node_a_position_y, node_b_position_x, node_b_position_y, frame_count_max,
+                 packet_label=""):
         self.square = Rectangle(Point(node_a_position_x - 5, node_a_position_y - 5),
                                 Point(node_a_position_x + 5, node_a_position_y + 5))
         self.square.setFill("black")
@@ -182,6 +186,7 @@ class Packet:
         self.frame_count += 1
         return self.frame_count == self.frame_count_max
 
+
 def main():
     start_time = time.time()
     frame_rate = 60
@@ -193,23 +198,15 @@ def main():
         vis.tick()
         vis.window.checkMouse()
         edge = vis.network.edge_list[random.randint(0, len(vis.network.edge_list)) - 1]
-        vis.send_packet(edge.node_a_label, edge.node_b_label, 50)
-        # click = vis.window.checkMouse()
-        #
-        # if click is not None:
-        #     debug += 1
-        #     if debug > 0:
-        #         # print("debug", debug)
-        #         # pick a random edge
-        #         edge = vis.network.edge_list[0]
-        #         vis.send_packet(edge.node_a_label, edge.node_b_label, 10)
+
+        vis.send_packet(edge.node_a_label, edge.node_b_label, random.randint(40, 100))
 
 
-width = 300
+## Testing!!
+width = 500
 random_network = randomly_generate_network()
 node_list, edge_list = circle_arrangement(width / 2 - 20, width / 2, width / 2, random_network[0], random_network[1])
 network = Network(node_list, edge_list)
 vis = Visualisation(width, network)
-
 
 main()
