@@ -9,39 +9,35 @@ class Router:
     edges: List[Edge]
     distances: Dict[str, int]
     address: str
+    to: List[Router]
 
     def __init__(self, address: str):
         self.edges = []
         self.neighbours = []
         self.address = address
         self.distances = {self.address: 0}
+        self.to = []
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
         for neighbour in self.neighbours:
             self.send_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances})
 
-    def update_distance_vector(self, received_vector: Packet):
+    def update_distance_vector(self, dv: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
         for node in dv.data["CONTENT"]:
             if node not in self.distances:
                 self.distances[node] = dv.data["CONTENT"][node] + self.distances[dv.from_addr]
-        for node in received_vector["CONTENT"]:
-            if node not in self.distance_vector:
-                self.distance_vector[node] = received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr]
-                self.to[node] = received_vector.from_addr
+                self.to[node] = dv.from_addr
             else:
-                self.distances[node] = min(self.distances[node],
-                                           dv.data["CONTENT"][node] + self.distances[dv.from_addr])
-                if self.distance_vector[node] > received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr]:
-                    self.distance_vector[node] = received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr]
-                    self.to[node] = received_vector.from_addr
+                if self.distances[node] > dv.data["CONTENT"][node] + self.distances[dv.from_addr]:
+                    self.distances[node] = dv.data["CONTENT"][node] + self.distances[dv.from_addr]
+                    self.to[node] = dv.from_addr
 
     def next_node(self, packet: Packet):
         """Returns the next address of the next router for a routed packet"""
         return self.to[packet.to_addr]
-
 
     def network_receive(self, packet: Packet):
         """Receives a packet and sends it to transport layer if need be"""
