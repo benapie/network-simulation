@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Tuple, Any
 import math
 from random import Random
-
+import random
 
 class Edge:
     a: Device
@@ -66,11 +66,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        # print("Sending data", data, "to", target)
+        print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        # print("Received data", data, "from edge", src)
+        print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
@@ -165,6 +165,8 @@ class Router:
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
+        if packet.to_addr not in self.to:
+            return random.choice(list(self.to.values()))
         return self.to[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
@@ -185,6 +187,7 @@ class Router:
                 edge.ticks_for_data_passthrough <= self.distances[router.address]:
             self.distances[router.address] = edge.ticks_for_data_passthrough
             self.to[router.address] = router.address
+        self.send_distance_vector()
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
