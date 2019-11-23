@@ -1,4 +1,4 @@
-from graphics import *
+from visualisation.graphics import *
 import math
 import random
 
