@@ -8,7 +8,7 @@ class Router:
         self.edges = []
         self.connected_to = []
         self.address = address
-        self.distance_vector = {}  # Empty distance vector initially constructed from information about neighbours
+        self.distance_vector = {self.address: 0}  # Empty distance vector initially constructed from information about neighbours
         for address in self.connected_to:
             for edge in self.edges:
                 if edge.a.address == address:
@@ -31,13 +31,20 @@ class Router:
         information regarding the optimum distance to other nodes"""
         for node in received_vector["CONTENT"]:
             if node not in self.distance_vector:
-                self.distance_vector[node] = received_vector["CONTENT"][node]
+                self.distance_vector[node] = received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr]
             else:
-                self.distance_vecotr[node] = min([self.distance_vector[node], received_vector["CONTENT"][node]])
+                self.distance_vecotr[node] = min([self.distance_vector[node], received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr])
 
     def next_node(self, packet: Packet):
         """Returns the next address of the next router for a routed packet"""
         return self.distance_vector[packet.to_addr]
+
+    def network_receive(self, packet: Packet):
+        """Receives a packet and sends it to transport layer if need be"""
+        if packet["HEAD"] == "DV":
+            self.update_distance_vector(packet)
+        else:
+            pass
 
     def link_to(self, node: Router, ticks_per_packet: int) -> Edge:
         """Links this router to another router,
