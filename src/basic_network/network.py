@@ -4,7 +4,7 @@ from typing import List
 
 
 class Network:
-    def __init__(self, routers: List[Router] = None):	
+    def __init__(self, routers: List[Router] = None):
         self.routers = routers
         self.edges = []
 
