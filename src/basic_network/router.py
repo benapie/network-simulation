@@ -21,6 +21,7 @@ class Router:
         self.to = []
         self.data_layer = DataLayer()
         self.data_layer.set_router(self)
+        self.packet_queues = {}
 
     def transport_send(self, content: str, to_addr: str):
         """Splits the content into packets and sends them"""
@@ -31,16 +32,16 @@ class Router:
         s_num = 0
         num_p = math.ceil(len(content)/255)
         while len(content) > 255:
-            Router.send_packet(Packet({"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p}, self.address, to_addr))
+            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
             content = content[255:]
             s_num += 1
         while len(content) < 255:
             content += "§"
         if len(content) != 0:
-            Router.send_packet(Packet({"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p}, self.address, to_addr))
+            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
     def transport_receive(self, packet):
-        pass
+
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
