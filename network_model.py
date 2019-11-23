@@ -144,6 +144,9 @@ class Router:
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
+        if packet.to_addr not in self.to:
+            # TODO: return random neighbour and set packet as lost
+            pass
         return self.to[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
@@ -164,6 +167,7 @@ class Router:
                 edge.ticks_for_data_passthrough <= self.distances[router.address]:
             self.distances[router.address] = edge.ticks_for_data_passthrough
             self.to[router.address] = router.address
+        self.send_distance_vector()
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
