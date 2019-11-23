@@ -23,6 +23,9 @@ class Router:
         self.data_layer.set_router(self)
         self.packet_queues = {}
 
+    def application_receive(self, data):
+        pass
+
     def transport_send(self, content: str, to_addr: str):
         """Splits the content into packets and sends them"""
         # Each packet is of length 255 (§) is added to pad packets of length < 255
@@ -32,16 +35,28 @@ class Router:
         s_num = 0
         num_p = math.ceil(len(content)/255)
         while len(content) > 255:
-            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
+            self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
             content = content[255:]
             s_num += 1
         while len(content) < 255:
             content += "§"
         if len(content) != 0:
-            Router.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
+            self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
     def transport_receive(self, packet):
-        pass
+        if packet.from_addr not in self.packet_queues:
+            self.packet_queues[packet.from_addr] = [packet.data]
+        else:
+            self.packet_queues[packet.from_addr].append(packet.data)
+        if len(self.packet_queues[packet.from_addr]) == packet.data["NUM_P"]:
+            self.application_receive(self.reconstruct_data(self.packet_queues[packet.from_addr]))
+
+    def reconstruct_data(self, packets: []):
+        packets.sort(key=lambda x: x["S_NUM"])
+        data = ""
+        for packet in packets:
+            data += packet["CONTENT"]
+        return data
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
@@ -70,7 +85,7 @@ class Router:
             if packet.data["HEAD"] == "DV":
                 self.update_distance_vector(packet)
             else:
-                raise NotImplementedError()
+                self.transport_receive(packet)
         else:
             self.data_layer.send_packet(packet, self.where_to(packet))
 

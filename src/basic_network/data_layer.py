@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 from src.basic_network.edge import Edge
 from src.basic_network.packet import Packet
@@ -15,7 +16,9 @@ class DataLayer:
         self.router = r
 
     def send_packet(self, p: Packet, target: str):
+        logging.debug("Sending Packet", p, "to", target)
         self.edges[target].send(p, target)
 
-    def accept_packet(self, p: Packet):
-        self.router.recieve_packet(p)
+    def accept_packet(self, p: Packet, src: Edge):
+        logging.debug("Received Packet", p, "from edge", src)
+        self.router.receive_packet(p)
