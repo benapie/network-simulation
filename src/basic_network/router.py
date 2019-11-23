@@ -1,70 +1,67 @@
 from __future__ import annotations
-from edge import Edge
-from packet import Packet
+from src.basic_network.edge import Edge
+from src.basic_network.packet import Packet
+from typing import List, Dict
 
 
 class Router:
+    neighbours: List[Router]
+    edges: List[Edge]
+    distances: Dict[str, int]
+    address: str
+
     def __init__(self, address: str):
         self.edges = []
-        self.connected_to = []
+        self.neighbours = []
         self.address = address
-        self.distance_vector = {self.address: 0}  # Empty distance vector initially constructed from information about neighbours
-        for address in self.connected_to:
-            for edge in self.edges:
-                if edge.a.address == address:
-                    self.distance_vector[address] = edge.a.ticks_per_packet
-                    break
-                elif edge.b.address == address:
-                    self.distance_vector[address] = edge.b.ticks_per_packet
-                    break
+        self.distances = {self.address: 0}
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
-        for edge in self.edges:
-            if edge.a == self:
-                self.send_packet(edge.b, Packet({"HEAD": "DV", "CONTENT": self.distance_vector}))
-            else:
-                self.send_packet(edge.a, Packet({"HEAD": "DV", "CONTENT": self.distance_vector}))
+        for neighbour in self.neighbours:
+            self.send_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances})
 
-    def update_distance_vector(self, received_vector: Packet):
+    def update_distance_vector(self, dv: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
-        for node in received_vector["CONTENT"]:
-            if node not in self.distance_vector:
-                self.distance_vector[node] = received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr]
+        for node in dv.data["CONTENT"]:
+            if node not in self.distances:
+                self.distances[node] = dv.data["CONTENT"][node] + self.distances[dv.from_addr]
             else:
-                self.distance_vecotr[node] = min([self.distance_vector[node], received_vector["CONTENT"][node] + self.distance_vector[received_vector.from_addr])
-
-    def next_node(self, packet: Packet):
-        """Returns the next address of the next router for a routed packet"""
-        return self.distance_vector[packet.to_addr]
+                self.distances[node] = min(self.distances[node],
+                                           dv.data["CONTENT"][node] + self.distances[dv.from_addr])
 
     def network_receive(self, packet: Packet):
         """Receives a packet and sends it to transport layer if need be"""
-        if packet["HEAD"] == "DV":
+        if packet.data["HEAD"] == "DV":
             self.update_distance_vector(packet)
         else:
             pass
 
-    def link_to(self, node: Router, ticks_per_packet: int) -> Edge:
-        """Links this router to another router,
-        while also setting the connection speed.
+    def update_dv(self, edge: Edge):
+        other_router = edge.b if edge.b != self else edge.a
+        self.distances[other_router] = edge.ticks_per_packet
+
+    def register_edge(self, router: Router, edge: Edge):
+        """Registers the link between this router to another router, while also setting the connection speed.
 
         Arguments:
-            node {Router} -- The other router to link to.
-            ticks_per_packet {int} -- The connection speed.
+            router {Router} -- The other router to link to.
+            edge {Edge} -- The new edge.
 
         Returns:
             Edge -- The Edge object created for this connection."""
-        raise NotImplementedError("tests etst")
+        self.edges.append(edge)
+        self.neighbours.append(router)
+        self.update_dv(edge)
 
-    def send_packet(self, addr: str, packet: Packet):
+    def send_packet(self, addr: str, data):
         """Sends packet to addr. If this is unknown,
         query network layer over where to send it to.
 
         Arguments:
             addr {str} -- The address of the target.
-            packet {Packet} -- The packet to send."""
+            data -- The data to send."""
         raise NotImplementedError("test test")
 
     def recieve_packet(self, packet: Packet):
