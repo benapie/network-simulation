@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from src.basic_network.data_layer import DataLayer
 from src.basic_network.edge import Edge
 from src.basic_network.packet import Packet
 from typing import List, Dict
@@ -9,7 +11,8 @@ class Router:
     edges: List[Edge]
     distances: Dict[str, int]
     address: str
-    to: List[Router]
+    to: List[str]
+    data_layer: DataLayer
 
     def __init__(self, address: str):
         self.edges = []
@@ -17,6 +20,8 @@ class Router:
         self.address = address
         self.distances = {self.address: 0}
         self.to = []
+        self.data_layer = DataLayer()
+        self.data_layer.set_router(self)
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
@@ -35,16 +40,19 @@ class Router:
                     self.distances[node] = dv.data["CONTENT"][node] + self.distances[dv.from_addr]
                     self.to[node] = dv.from_addr
 
-    def next_node(self, packet: Packet):
-        """Returns the next address of the next router for a routed packet"""
+    def where_to(self, packet: Packet) -> str:
+        """Return where to send the packet."""
         return self.to[packet.to_addr]
 
     def network_receive(self, packet: Packet):
-        """Receives a packet and sends it to transport layer if need be"""
-        if packet.data["HEAD"] == "DV":
-            self.update_distance_vector(packet)
+        """Decides what needs to be done with the received packet"""
+        if packet.to_addr == self.address:
+            if packet.data["HEAD"] == "DV":
+                self.update_distance_vector(packet)
+            else:
+                raise NotImplementedError()
         else:
-            pass
+            self.data_layer.send_packet(packet, self.where_to(packet))
 
     def update_dv(self, edge: Edge):
         other_router = edge.b if edge.b != self else edge.a
@@ -63,14 +71,15 @@ class Router:
         self.neighbours.append(router)
         self.update_dv(edge)
 
-    def send_packet(self, addr: str, data):
-        """Sends packet to addr. If this is unknown,
+    def send_data(self, addr: str, data):
+        """Sends data to addr. If this is unknown,
         query network layer over where to send it to.
 
         Arguments:
             addr {str} -- The address of the target.
             data -- The data to send."""
-        raise NotImplementedError("test test")
+        p = Packet(data, self.address, addr)
+        self.data_layer.send_packet(p, self.where_to(addr))
 
     def recieve_packet(self, packet: Packet):
         raise NotImplementedError("test setsers")
