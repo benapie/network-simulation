@@ -19,11 +19,12 @@ class Edge:
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
         tick along, while also manging sending to the routers if they arrive."""
-        packets = ((data, tar) for (data, tar, ticks) in self.data_in_transit
-                   if (ticks == self.ticks_for_data_passthrough - 1))
-        for data, tar in packets:
-            self.data_in_transit.remove((data, tar, self.ticks_for_data_passthrough - 1))
-            tar.accept_data(data)
+        if self.a.router.address == "0" and self.b.router.address=="1":
+            print(self.data_in_transit)
+        for data, tar, ticks in list(self.data_in_transit):
+            if ticks - 1 == self.ticks_for_data_passthrough:
+                self.data_in_transit.remove((data, tar, self.ticks_for_data_passthrough - 1))
+                tar.accept_data(data, self)
         for i in range(len(self.data_in_transit)):
             self.data_in_transit[i] = (self.data_in_transit[i][0],
                                        self.data_in_transit[i][1], self.data_in_transit[i][2] + 1)
@@ -43,11 +44,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        logging.debug("Sending data", data, "to", target)
+        print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        logging.debug("Received data", data, "from edge", src)
+        print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
@@ -148,7 +149,8 @@ class Router:
         """Registers the link between this router to another router."""
         self.neighbours.append(router)
         self.device.add_edge(edge, router.address)
-        if edge.ticks_for_data_passthrough <= self.distances[router.address]:
+        if router.address not in self.distances.keys() or \
+                edge.ticks_for_data_passthrough <= self.distances[router.address]:
             self.distances[router.address] = edge.ticks_for_data_passthrough
             self.to[router.address] = router.address
 
