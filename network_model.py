@@ -1,33 +1,48 @@
 from __future__ import annotations
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict
 import math
+from random import Random
+import random
 
 
 class Edge:
-    data_in_transit: List[Tuple[Any, Device, int]]
+    a: Device
+    b: Device
+    ticks_for_data_passthrough: int
+    curr_tick: int
+    data_in_transit: List[Edge.TransitData]
+    main_rng: Random
+
+    class TransitData:
+        target: Device
+        end_tick: int
+
+        def __init__(self, data, target: Device, end_tick):
+            self.data = data
+            self.target = target
+            self.end_tick = end_tick
 
     def __init__(self, a: Device, b: Device, ticks_for_data_passthrough: int):
         self.a = a
         self.b = b
         self.ticks_for_data_passthrough = ticks_for_data_passthrough
         self.data_in_transit = []
+        self.main_rng = Random()
+        self.curr_tick = 0
 
     def send_data_through(self, data, sender: Device):
-        self.data_in_transit.append((data, self.a if sender != self.a else self.b, 0))
+        end_tick = self.curr_tick + self.ticks_for_data_passthrough\
+                   + self.main_rng.randint(0, math.ceil(2.5*self.ticks_for_data_passthrough))
+        self.data_in_transit.append(Edge.TransitData(data, self.a if sender != self.a else self.b, end_tick))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
         tick along, while also manging sending to the routers if they arrive."""
-        for i in range(len(self.data_in_transit)):
-            self.data_in_transit[i] = (self.data_in_transit[i][0],
-                                       self.data_in_transit[i][1], self.data_in_transit[i][2] + 1)
-        for data, tar, ticks in self.data_in_transit:
-            if ticks == self.ticks_for_data_passthrough:
-                tar.accept_data(data, self)
-        self.data_in_transit = [t for t in self.data_in_transit if t[2] < self.ticks_for_data_passthrough]
-
-    def get_data_in_transit(self) -> List[Any, Device, int]:
-        return self.data_in_transit
+        self.curr_tick += 1
+        for transit in self.data_in_transit:
+            if transit.end_tick == self.curr_tick:
+                transit.target.accept_data(transit.data, self)
+        self.data_in_transit = [d for d in self.data_in_transit if self.curr_tick < d.end_tick]
 
     def __str__(self):
         return str(self.a) + " -> " + str(self.b)
@@ -109,10 +124,10 @@ class Router:
     def transport_receive(self, packet):
         def reconstruct_data(packets: []):
             packets.sort(key=lambda x: x["S_NUM"])
-            data = ""
+            d = ""
             for p in packets:
-                data += p["CONTENT"]
-            return data
+                d += p["CONTENT"]
+            return d
 
         if packet.from_addr not in self.packet_queues:
             self.packet_queues[packet.from_addr] = [packet.data]
@@ -132,6 +147,13 @@ class Router:
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
+        to_remove = []
+        for node in self.to:
+            if self.to[node] == dv_packet.from_addr and node not in dv_packet.data["CONTENT"]:
+                to_remove.append(node)
+        for node in to_remove:
+            self.to.pop(node)
+            self.distances.pop(node)
         for node in dv_packet.data["CONTENT"]:
             if node not in self.distances:
                 self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
@@ -143,6 +165,8 @@ class Router:
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
+        if packet.to_addr not in self.to:
+            return random.choice(list(self.to.values()))
         return self.to[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
@@ -150,6 +174,8 @@ class Router:
         if packet.to_addr == self.address:
             if packet.data["HEAD"] == "DV":
                 self.update_distance_vector(packet)  # accept DV packet as something to process independently
+            elif packet.data["HEAD"] == "DEL":
+                self.distances.pop(packet.from_addr)
             else:
                 self.transport_receive(packet)
         else:
@@ -163,6 +189,13 @@ class Router:
                 edge.ticks_for_data_passthrough <= self.distances[router.address]:
             self.distances[router.address] = edge.ticks_for_data_passthrough
             self.to[router.address] = router.address
+        self.send_distance_vector()
+
+    def send_del(self):
+        """Sends a delete packet to neighbours"""
+        for neighbour in self.neighbours:
+            self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys"})
+
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
@@ -182,6 +215,14 @@ class Network:
     def __init__(self, routers: List[Router] = None):
         self.routers = routers
         self.edges = []
+
+    def delete_router(self, addr: str):
+        """Deletes a router"""
+        for i in range(len(self.routers)):
+            if self.routers[i].address == addr:
+                self.routers[i].send_del()
+                self.routers.pop(i)
+                break
 
     def link_to(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
         """Links two routers together,
