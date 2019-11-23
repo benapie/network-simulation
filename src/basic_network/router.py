@@ -46,7 +46,7 @@ class Router:
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
         for neighbour in self.neighbours:
-            self.send_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances})
+            self.send_data(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances})
 
     def update_distance_vector(self, dv: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
@@ -64,7 +64,7 @@ class Router:
         """Return where to send the packet."""
         return self.to[packet.to_addr]
 
-    def network_receive(self, packet: Packet):
+    def receive_packet(self, packet: Packet):
         """Decides what needs to be done with the received packet"""
         if packet.to_addr == self.address:
             if packet.data["HEAD"] == "DV":
@@ -76,7 +76,9 @@ class Router:
 
     def update_dv(self, edge: Edge):
         other_router = edge.b if edge.b != self else edge.a
-        self.distances[other_router] = edge.ticks_per_packet
+        if edge.ticks_per_packet <= self.distances[other_router]:
+            self.distances[other_router.address] = edge.ticks_per_packet
+            self.to[other_router.address] = other_router.address
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router, while also setting the connection speed.
@@ -99,7 +101,4 @@ class Router:
             addr {str} -- The address of the target.
             data -- The data to send."""
         p = Packet(data, self.address, addr)
-        self.data_layer.send_packet(p, self.where_to(addr))
-
-    def recieve_packet(self, packet: Packet):
-        raise NotImplementedError("test setsers")
+        self.data_layer.send_packet(p, self.where_to(p))
