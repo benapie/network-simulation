@@ -9,7 +9,8 @@ class Node:
         self.x = x
         self.y = y
         self.circle = Circle(Point(x, y), r)
-        self.circle.setFill("white")
+        self.circle.setFill("black")
+        self.circle.setOutline("white")
 
 
 class Edge:
@@ -17,6 +18,7 @@ class Edge:
         self.node_a_label = node_a.label
         self.node_b_label = node_b.label
         self.line = Line(node_a.circle.getCenter(), node_b.circle.getCenter())
+        self.line.setFill("white")
 
 
 class Network:
@@ -31,6 +33,12 @@ class Network:
                                  "Node label already in the network.")
             else:
                 node_list.append(new_node)
+
+    def get_node_by_label(self, node_label):
+        for node in self.node_list:
+            if node.label == node_label:
+                return node
+        return None
 
     def remove_node_by_label(self, node_label):
         """ Removes a node by label, will not throw an error if it is not found """
@@ -65,16 +73,13 @@ class Network:
         self.remove_edge_by_labels(edge_to_remove.node_a_label, edge_to_remove.node_b_label)
 
 
-class Packet:
-    def __init__(self, node_a_position_x, node_a_position_y, node_b_position_x, node_b_position_y, frame_count):
-        pass
-
 
 class Visualisation:
     def __init__(self, width, network):
         self.width = width
         self.network = network
         self.window = GraphWin("", width, width)
+        self.window.setBackground("black")
         self.packets = []
         for edge in network.edge_list:
             edge.line.draw(self.window)
@@ -86,6 +91,8 @@ class Visualisation:
 
     def send_packet(self, node_a_label, node_b_label):
         """ Visualises a packet going from node A to node B """
+
+        packets.append(Packet())
 
 
 
@@ -144,15 +151,31 @@ def randomly_generate_network():
     return node_list, edge_list
 
 
+class Packet:
+    def __init__(self, node_a_position_x, node_a_position_y, node_b_position_x, node_b_position_y, frame_count_max):
+        self.circle = Circle(Point(node_a_position_x, node_a_position_y), 5)
+        self.dx = (node_b_position_x - node_a_position_x) / frame_count_max
+        self.dy = (node_b_position_y - node_a_position_y) / frame_count_max
+        self.frame_count = 0
+        self.frame_count_max = frame_count_max
+
+    def tick(self):
+        self.circle.move(self.dx, self.dy)
+        self.frame_count += 1
+        return self.frame_count == self.frame_count_max
+
 def main():
     start_time = time.time()
     frame_rate = 60
     frame_count = 0
     debug = 0
+    packet = Packet(10, 10, 20, 20, 10)
     while True:
         frame_count += 1
         time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
         click = vis.window.checkMouse()
+        packet.tick()
+
         if click is not None:
             debug += 1
             if debug == 1:
