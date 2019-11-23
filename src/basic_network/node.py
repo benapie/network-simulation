@@ -15,6 +15,3 @@ class Node:
         if node not in self.connected_to:
             raise ValueError("cannot send to disconnected node")
         raise NotImplementedError("test test")
-
-    def next_node(self, packet):
-        '''Returns the next node for the packet to be sent to'''
