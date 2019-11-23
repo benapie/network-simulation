@@ -1,7 +1,7 @@
 from __future__ import annotations
 from edge import Edge
 from packet import Packet
-
+import math
 
 class Router:
     def __init__(self, address: str):
@@ -20,6 +20,26 @@ class Router:
                     self.distance_vector[address] = edge.b.ticks_per_packet
                     self.to[address] = address
                     break
+
+    def transport_send(self, content: str, to_addr: str):
+        """Splits the content into packets and sends them"""
+        # Each packet is of length 255 (§) is added to pad packets of length < 255
+        # Each packet has a sequence number S_NUM (for reconstruction)
+        # Each packet is sent with a NUM_P specifying the number of packets in content (for reconstruction)
+        content.replace("§", "\§")
+        s_num = 0
+        num_p = math.ceil(len(content)/255)
+        while len(content) > 255:
+            Router.send_packet(Packet({"CONTENT": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p}, self.address, to_addr))
+            content = content[255:]
+            s_num += 1
+        while len(content) < 255:
+            content += "§"
+        if len(content) != 0:
+            Router.send_packet(Packet({"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p}, self.address, to_addr))
+
+    def transport_receive(self, packet):
+        pass
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
@@ -44,7 +64,6 @@ class Router:
     def next_node(self, packet: Packet):
         """Returns the next address of the next router for a routed packet"""
         return self.to[packet.to_addr]
-
 
     def network_receive(self, packet: Packet):
         """Receives a packet and sends it to transport layer if need be"""
