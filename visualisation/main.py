@@ -1,8 +1,7 @@
 from visualisation.graphics import *
 import math
 import random
-
-from visualisation.graphics import GraphWin, Circle, Point
+import time
 
 alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -10,19 +9,18 @@ node_list = []
 edge_list = []
 
 # initialise nodes
-node_count = random.randint(3, 26)  # make this 26
+node_count = random.randint(3, 10)  # make this 26
 for i in range(0, node_count):
     node_list.append(alphabet[i])
 
-max_edge_count = node_count - 1
+max_edge_count = min(5, node_count - 1)
 for i in node_list:
     edge_count = random.randint(0, max_edge_count)
-    for j in range(0, edge_count):
+    for j in range(1, edge_count):
         node = alphabet[random.randint(0, node_count - 1)]
-        if node == i:
-            next
-        edge_list.append((i, node))
-        
+        if node != i:
+            edge_list.append((i, node))
+
 width = 300  # = height
 win = GraphWin("", width, width)
 
@@ -42,12 +40,37 @@ for i in range(0, len(edge_list)):
     b_point = nodes[node_list.index(edge_list[i][1])].getCenter()
     ab_line = Line(a_point, b_point)
     edges.append(ab_line)
-    print(a_point, b_point)
 for i in edges:
     i.draw(win)
 for i in nodes:
     i.draw(win)
 
+# Pick an edge
+edge = edge_list[random.randint(0, len(edge_list) - 1)]
+print(edge)
 
-input()
+# Lets animate a packet
+# Initial position
+packet = Circle(nodes[node_list.index(edge[0])].getCenter(), 5)
+packet.setFill("black")
+packet.draw(win)
+# Calculate difference vector
+frame_count = 25
+dx = (nodes[node_list.index(edge[1])].getCenter().x - nodes[node_list.index(edge[0])].getCenter().x) * math.pow(25, -1)
+dy = (nodes[node_list.index(edge[1])].getCenter().y - nodes[node_list.index(edge[0])].getCenter().y) * math.pow(25, -1)
 
+# while True:
+#     win.getMouse()
+#     packet.move(dx / 10, dy / 10)
+
+
+start_time = time.time()
+frame_rate = 60
+i = 0
+win.getMouse()
+while True:
+    time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
+    win.checkMouse()
+    if i < frame_count:
+        packet.move(dx, dy)
+        i += 1

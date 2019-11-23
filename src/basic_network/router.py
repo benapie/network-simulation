@@ -23,6 +23,9 @@ class Router:
         self.data_layer.set_router(self)
         self.packet_queues = {}
 
+    def application_receive(self, data):
+        pass
+
     def transport_send(self, content: str, to_addr: str):
         """Splits the content into packets and sends them"""
         # Each packet is of length 255 (§) is added to pad packets of length < 255
@@ -40,19 +43,20 @@ class Router:
         if len(content) != 0:
             self.send_data(to_addr, {"CONTENT": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
-    def application_send(self, data):
-        pass
-
     def transport_receive(self, packet):
         if packet.from_addr not in self.packet_queues:
             self.packet_queues[packet.from_addr] = [packet.data]
         else:
             self.packet_queues[packet.from_addr].append(packet.data)
         if len(self.packet_queues[packet.from_addr]) == packet.data["NUM_P"]:
-            self.application_send(self.reconstruct_data(self.packet_queues[packet.from_addr]))
+            self.application_receive(self.reconstruct_data(self.packet_queues[packet.from_addr]))
 
     def reconstruct_data(self, packets: []):
-        pass
+        packets.sort(key=lambda x: x["S_NUM"])
+        data = ""
+        for packet in packets:
+            data += packet["CONTENT"]
+        return data
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
