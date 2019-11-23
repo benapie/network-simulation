@@ -4,8 +4,8 @@ from typing import List
 
 
 class Network:
-    def __init__(self, routers: List[Router] = None):
-        self.nodes = routers
+    def __init__(self, routers: List[Router] = None):	
+        self.routers = routers
         self.edges = []
 
     def link_to(self, x: Router, y: Router, ticks_per_packet: int) -> Edge:
