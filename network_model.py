@@ -87,7 +87,8 @@ class Router:
         self.packet_queues = {}
 
     def application_receive(self, data):
-        pass
+        print(data)
+        print(self.address)
 
     def transport_send(self, content: str, to_addr: str):
         """Splits the content into packets and sends them"""
@@ -119,7 +120,10 @@ class Router:
         else:
             self.packet_queues[packet.from_addr].append(packet.data)
         if len(self.packet_queues[packet.from_addr]) == packet.data["NUM_P"]:
-            self.application_receive(reconstruct_data(self.packet_queues[packet.from_addr]))  # TODO: change app
+            data = reconstruct_data(self.packet_queues[packet.from_addr])
+            while data[-1] == "§" and data[-2] != "\\":
+                data = data[:-1]
+            self.application_receive(data)
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""

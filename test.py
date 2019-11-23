@@ -17,8 +17,6 @@ for _ in range(5):
     for _ in range(100):
         network.network_tick()
 
-input()
-
 routers[0].transport_send("Hello, World!", "2")
 for i in range(10):
     print("BEFORE TICK", i)
