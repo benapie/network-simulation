@@ -73,27 +73,42 @@ class Network:
         self.remove_edge_by_labels(edge_to_remove.node_a_label, edge_to_remove.node_b_label)
 
 
-
 class Visualisation:
     def __init__(self, width, network):
         self.width = width
         self.network = network
-        self.window = GraphWin("", width, width)
+        self.window = GraphWin("", width, width, autoflush=False)
         self.window.setBackground("black")
-        self.packets = []
+        self.packet_list = []
         for edge in network.edge_list:
             edge.line.draw(self.window)
         for node in network.node_list:
             node.circle.draw(self.window)
 
     def tick(self):
-        self.window.getMouse()
+        self.tick_packet()
 
-    def send_packet(self, node_a_label, node_b_label):
+    def tick_packet(self):
+        packet_death_note = []
+        for packet in self.packet_list:
+            if packet.tick() == 1:
+                packet_death_note.append(packet)
+        for packet in packet_death_note:
+            packet.square.undraw()
+            self.packet_list.remove(packet)
+
+    def send_packet(self, node_a_label, node_b_label, frame_count):
         """ Visualises a packet going from node A to node B """
-
-        packets.append(Packet())
-
+        # find the nodes
+        node_a = self.network.get_node_by_label(node_a_label)
+        node_b = self.network.get_node_by_label(node_b_label)
+        packet = Packet(node_a.circle.getCenter().x,
+                                       node_a.circle.getCenter().y,
+                                       node_b.circle.getCenter().x,
+                                       node_b.circle.getCenter().y,
+                                       frame_count)
+        packet.square.draw(self.window)
+        self.packet_list.append(packet)
 
 
 def circle_arrangement(r, x, y, node_label_list, edge_label_list):
@@ -136,7 +151,7 @@ def randomly_generate_network():
     node_list = []
     edge_list = []
     # generate nodes
-    node_count = random.randint(5, 15)  # make this 26
+    node_count = random.randint(25, 35)  # make this 26
     for i in range(0, node_count):
         node_list.append(alphabet[i])
     # generate edges
@@ -153,14 +168,17 @@ def randomly_generate_network():
 
 class Packet:
     def __init__(self, node_a_position_x, node_a_position_y, node_b_position_x, node_b_position_y, frame_count_max):
-        self.circle = Circle(Point(node_a_position_x, node_a_position_y), 5)
+        self.square = Rectangle(Point(node_a_position_x - 5, node_a_position_y - 5),
+                                Point(node_a_position_x + 5, node_a_position_y + 5))
+        self.square.setFill("black")
+        self.square.setOutline("white")
         self.dx = (node_b_position_x - node_a_position_x) / frame_count_max
         self.dy = (node_b_position_y - node_a_position_y) / frame_count_max
         self.frame_count = 0
         self.frame_count_max = frame_count_max
 
     def tick(self):
-        self.circle.move(self.dx, self.dy)
+        self.square.move(self.dx, self.dy)
         self.frame_count += 1
         return self.frame_count == self.frame_count_max
 
@@ -169,21 +187,25 @@ def main():
     frame_rate = 60
     frame_count = 0
     debug = 0
-    packet = Packet(10, 10, 20, 20, 10)
     while True:
         frame_count += 1
         time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
-        click = vis.window.checkMouse()
-        packet.tick()
+        vis.tick()
+        vis.window.checkMouse()
+        edge = vis.network.edge_list[random.randint(0, len(vis.network.edge_list)) - 1]
+        vis.send_packet(edge.node_a_label, edge.node_b_label, 50)
+        # click = vis.window.checkMouse()
+        #
+        # if click is not None:
+        #     debug += 1
+        #     if debug > 0:
+        #         # print("debug", debug)
+        #         # pick a random edge
+        #         edge = vis.network.edge_list[0]
+        #         vis.send_packet(edge.node_a_label, edge.node_b_label, 10)
 
-        if click is not None:
-            debug += 1
-            if debug == 1:
-                edge = vis.network.edge_list[0]
-                vis.network.remove_edge_by_labels(edge.node_a_label, edge.node_b_label)
 
-
-width = 600
+width = 300
 random_network = randomly_generate_network()
 node_list, edge_list = circle_arrangement(width / 2 - 20, width / 2, width / 2, random_network[0], random_network[1])
 network = Network(node_list, edge_list)
