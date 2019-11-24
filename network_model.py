@@ -246,7 +246,7 @@ class Network:
         self.router_list[addr].send_del()
         del self.router_list[addr]
 
-    def link_to(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
+    def link(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
         """Links two routers together,
         while also setting the connection speed.
 
