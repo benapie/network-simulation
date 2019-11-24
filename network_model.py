@@ -228,25 +228,25 @@ class Router:
 
 
 class Network:
-    router_list: Dict[str, Router]
+    router_dictionary: Dict[str, Router]
     edges: List[Edge]
 
     def __init__(self):
-        self.router_list = {}
+        self.router_dictionary = {}
         self.edges = []
 
     def add_router(self, router: Router):
-        self.router_list[router.address] = router
+        self.router_dictionary[router.address] = router
 
     def get_router(self, addr: str) -> Router:
-        return self.router_list[addr]
+        return self.router_dictionary[addr]
 
     def delete_router(self, addr: str):
         """Deletes a router"""
-        self.router_list[addr].send_del()
-        del self.router_list[addr]
+        self.router_dictionary[addr].send_del()
+        del self.router_dictionary[addr]
 
-    def link(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
+    def link(self, x: str, y: str, ticks_for_data_passthrough: int) -> Edge:
         """Links two routers together,
         while also setting the connection speed.
 
@@ -257,10 +257,10 @@ class Network:
 
         Returns:
             Edge -- The Edge object created for this connection."""
-        edge = Edge(x.device, y.device, ticks_for_data_passthrough)
+        edge = Edge(self.router_dictionary[x].device, self.router_dictionary[y].device, ticks_for_data_passthrough)
         self.edges.append(edge)
-        x.register_edge(y, edge)
-        y.register_edge(x, edge)
+        self.router_dictionary[x].register_edge(self.router_dictionary[y], edge)
+        self.router_dictionary[y].register_edge(self.router_dictionary[x], edge)
         return edge
 
     def network_tick(self):
