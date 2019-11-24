@@ -36,7 +36,7 @@ width = 500
 router_label_list, link_labels_list = randomly_generate_network()
 link_delays = []
 for i in range(len(link_labels_list)):
-    link_delays.append(random.randint(20, 40))
+    link_delays.append(random.randint(5, 40))
 
 node_list, edge_list = circle_arrangement(width / 2 - 20, width / 2, width / 2, router_label_list, link_labels_list)
 graphic_network = GraphicNetwork(node_list, edge_list)
@@ -66,9 +66,9 @@ def main():
         vis.tick()
         mouse = vis.window.checkMouse()
         network.network_tick()
-        if frame_count % (frame_rate * 10) == 0:
+        if frame_count % (frame_rate * 30) == 0:
             network.update_vectors()
-        if frame_count % 1 == 0:
+        if frame_count % 30 == 0:
             # find a random pair
             router_a_address, router_b_address = "1", "1"
             while router_a_address == router_b_address:
