@@ -153,7 +153,7 @@ def circle_arrangement(r, x, y, node_label_list, edge_label_list):
     return node_list, edge_list
 
 
-def randomly_generate_network():
+def randomly_generate_network(node_count_lower_bound = 10, node_count_upper_bound = 20):
     """
         Randomly generates a list of nodes (A-Z) and edges
         :return: (node_label_list, edge_label_list) where edge_label_list = [node_a.label, node_b.label]
@@ -162,7 +162,7 @@ def randomly_generate_network():
     node_list = []
     edge_list = []
     # generate nodes
-    node_count = random.randint(25, 35)  # make this 26
+    node_count = random.randint(node_count_lower_bound, node_count_upper_bound)  # make this 26
     for i in range(0, node_count):
         node_list.append(alphabet[i])
     # generate edges
