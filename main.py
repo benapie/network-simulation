@@ -66,7 +66,7 @@ def main():
         vis.tick()
         mouse = vis.window.checkMouse()
         network.network_tick()
-        if frame_count % (frame_rate * 30) == 0:
+        if frame_count % (frame_rate * 20) == 0:
             network.update_vectors()
         if frame_count % 30 == 0:
             # find a random pair
