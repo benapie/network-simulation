@@ -51,10 +51,6 @@ for router_label in router_label_list:
 for i in range(0, len(link_labels_list)):
     network.link(link_labels_list[i][0], link_labels_list[i][1], link_delays[i])
 
-long_str = ""
-for i in range(333):
-    long_str += "xyza"
-
 
 def main():
     start_time = time.time()
