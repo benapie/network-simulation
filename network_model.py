@@ -221,15 +221,15 @@ class Router:
 
 class Network:
     def __init__(self, routers: List[Router] = None):
-        self.routers = routers
+        self.router_list = routers
         self.edges = []
 
     def delete_router(self, addr: str):
         """Deletes a router"""
-        for i in range(len(self.routers)):
-            if self.routers[i].address == addr:
-                self.routers[i].send_del()
-                self.routers.pop(i)
+        for i in range(len(self.router_list)):
+            if self.router_list[i].address == addr:
+                self.router_list[i].send_del()
+                self.router_list.pop(i)
                 break
 
     def link_to(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
