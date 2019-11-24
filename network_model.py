@@ -293,6 +293,11 @@ class Network:
             self.router_dictionary[router].send_distance_vector()
 
     def update_vis_with_packet(self, router_from_address: str, router_to_address: str, router_color_address: str,
-                               ticks: int):
+                               ticks: int, packet_number: int):
+        """ Updates vis with the packets being sent this tick """
         if self.vis is not None:
-            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks)
+            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_number)
+
+    def update_vis_with_queues(self, router_from_address: str, router_to_address: str, queue_length: int):
+        """ Updates vis with the number of packets in an edge queue. Pls send a int also edge identified with nodes"""
+        self.vis.update_edge_queue(router_from_address, router_to_address, queue_length)
