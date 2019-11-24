@@ -220,24 +220,24 @@ class Router:
 
 
 class Network:
-    routers: Dict[str, routers]
+    router_list: Dict[str, Router]
     edges: List[Edge]
 
     def __init__(self):
-        self.routers = {}
+        self.router_list = {}
         self.edges = []
 
     def add_router(self, router: Router):
-        self.routers[router.address] = router
+        self.router_list[router.address] = router
 
     def get_router(self, addr: str) -> Router:
-        return self.routers[addr]
+        return self.router_list[addr]
 
     def delete_router(self, addr: str):
         """Deletes a router"""
-        self.routers[addr].send_del()
+        self.router_list[addr].send_del()
         # todo: when delete packet received delete edge!
-        del self.routers[addr]
+        del self.router_list[addr]
 
     def link_to(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
         """Links two routers together,
