@@ -34,7 +34,7 @@ height = 750
 # for i in range(len(link_labels_list)):
 #     link_delays.append(random.randint(4, 15))
 
-router_label_list, link_labels_list = randomly_generate_network(1, 1)
+router_label_list, link_labels_list = randomly_generate_network()
 link_delays = []
 for i in range(len(link_labels_list)):
     link_delays.append(random.randint(5, 40))
