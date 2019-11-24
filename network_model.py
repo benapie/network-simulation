@@ -68,31 +68,31 @@ class Edge:
 
 
 class Device:
-    edges: Dict[str, Edge]
+    edge_dictionary: Dict[str, Edge]
     router: Router
 
     def __init__(self):
-        self.edges = {}
+        self.edge_dictionary = {}
 
     def set_router(self, r: Router):
         self.router = r
 
     def send_data(self, data, target: str):
         print("Sending data", data, "to", target)
-        self.edges[target].send_data_through(data, self)
+        self.edge_dictionary[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
         print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
-        self.edges[address] = edge
+        self.edge_dictionary[address] = edge
 
     def __str__(self):
         return "D#" + str(self.router)
 
     def remove_edge(self, address: str):
-        del self.edges[address]
+        del self.edge_dictionary[address]
 
 
 # Packet stands alone, should not be doing **anything** should just sit there and take it!
@@ -107,27 +107,27 @@ class Packet:
 
 
 class Router:
-    neighbours: List[Router]
-    distances: Dict[str, int]
+    neighbour_list: List[Router]
+    distance_dictionary: Dict[str, int]
     address: str
-    to: Dict[str, str]
+    to_dictionary: Dict[str, str]
     device: Device
 
     def __init__(self, address: str):
-        self.neighbours = []
+        self.neighbour_list = []
         self.address = address
-        self.distances = {self.address: 0}
-        self.to = {}
+        self.distance_dictionary = {self.address: 0}
+        self.to_dictionary = {}
         self.device = Device()
         self.device.set_router(self)
-        self.packet_queues = {}
+        self.packet_queue_dictionary = {}
 
     def application_receive(self, data):
         print(data)
         print(self.address)
 
     def transport_send(self, content: str, to_addr: str):
-        if len(self.to) == 0:
+        if len(self.to_dictionary) == 0:
             return
         """Splits the content into packets and sends them"""
         # Each packet is of length 255 (§) is added to pad packets of length < 255
@@ -146,52 +146,52 @@ class Router:
             self.send_new_packet(to_addr, {"HEAD": "DATA", "CONTENT": content, "S_NUM": s_num, "NUM_P": num_p})
 
     def transport_receive(self, packet):
-        def reconstruct_data(packets: []):
-            packets.sort(key=lambda x: x["S_NUM"])
+        def reconstruct_data(packet_dictionary: []):
+            packet_dictionary.sort(key=lambda x: x["S_NUM"])
             d = ""
-            for p in packets:
+            for p in packet_dictionary:
                 d += p["CONTENT"]
             return d
 
-        if packet.from_addr not in self.packet_queues:
-            self.packet_queues[packet.from_addr] = [packet.data]
+        if packet.from_addr not in self.packet_queue_dictionary:
+            self.packet_queue_dictionary[packet.from_addr] = [packet.data]
         else:
-            self.packet_queues[packet.from_addr].append(packet.data)
-        if len(self.packet_queues[packet.from_addr]) == packet.data["NUM_P"]:
-            data = reconstruct_data(self.packet_queues[packet.from_addr])
+            self.packet_queue_dictionary[packet.from_addr].append(packet.data)
+        if len(self.packet_queue_dictionary[packet.from_addr]) == packet.data["NUM_P"]:
+            data = reconstruct_data(self.packet_queue_dictionary[packet.from_addr])
             while data[-1] == "§" and data[-2] != "\\":
                 data = data[:-1]
             self.application_receive(data)
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
-        for neighbour in self.neighbours:
-            self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances})
+        for neighbour in self.neighbour_list:
+            self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distance_dictionary})
 
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
         to_remove = []
-        for node in self.to:
-            if self.to[node] == dv_packet.from_addr and node not in dv_packet.data["CONTENT"]:
+        for node in self.to_dictionary:
+            if self.to_dictionary[node] == dv_packet.from_addr and node not in dv_packet.data["CONTENT"]:
                 to_remove.append(node)
         for node in to_remove:
-            self.to.pop(node)
-            self.distances.pop(node)
+            self.to_dictionary.pop(node)
+            self.distance_dictionary.pop(node)
         for node in dv_packet.data["CONTENT"]:
-            if node not in self.distances:
-                self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
-                self.to[node] = dv_packet.from_addr
+            if node not in self.distance_dictionary:
+                self.distance_dictionary[node] = dv_packet.data["CONTENT"][node] + self.distance_dictionary[dv_packet.from_addr]
+                self.to_dictionary[node] = dv_packet.from_addr
             else:
-                if self.distances[node] > dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]:
-                    self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
-                    self.to[node] = dv_packet.from_addr
+                if self.distance_dictionary[node] > dv_packet.data["CONTENT"][node] + self.distance_dictionary[dv_packet.from_addr]:
+                    self.distance_dictionary[node] = dv_packet.data["CONTENT"][node] + self.distance_dictionary[dv_packet.from_addr]
+                    self.to_dictionary[node] = dv_packet.from_addr
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
-        if packet.to_addr not in self.to:
-            return random.choice(list(self.to.values()))
-        return self.to[packet.to_addr]
+        if packet.to_addr not in self.to_dictionary:
+            return random.choice(list(self.to_dictionary.values()))
+        return self.to_dictionary[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
         """Decides what needs to be done with the received packet"""
@@ -207,28 +207,28 @@ class Router:
 
     def remove_router(self, packet):
         to_del = packet.from_addr
-        for i in range(len(self.neighbours)):
-            if self.neighbours[i].address == to_del:
-                del self.neighbours[i]
+        for i in range(len(self.neighbour_list)):
+            if self.neighbour_list[i].address == to_del:
+                del self.neighbour_list[i]
                 break
-        self.distances.pop(packet.from_addr)
-        del self.to[to_del]
-        self.to = {to: thru for (to, thru) in self.to.items() if thru != to_del}
+        self.distance_dictionary.pop(packet.from_addr)
+        del self.to_dictionary[to_del]
+        self.to_dictionary = {to: thru for (to, thru) in self.to_dictionary.items() if thru != to_del}
         self.device.remove_edge(to_del)
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router."""
-        self.neighbours.append(router)
+        self.neighbour_list.append(router)
         self.device.add_edge(edge, router.address)
-        if router.address not in self.distances.keys() or \
-                edge.ticks_for_data_passthrough <= self.distances[router.address]:
-            self.distances[router.address] = edge.ticks_for_data_passthrough
-            self.to[router.address] = router.address
+        if router.address not in self.distance_dictionary.keys() or \
+                edge.ticks_for_data_passthrough <= self.distance_dictionary[router.address]:
+            self.distance_dictionary[router.address] = edge.ticks_for_data_passthrough
+            self.to_dictionary[router.address] = router.address
         self.send_distance_vector()
 
     def send_del(self):
         """Sends a delete packet to neighbours"""
-        for neighbour in self.neighbours:
+        for neighbour in self.neighbour_list:
             self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys"})
 
     def send_new_packet(self, addr: str, data):
@@ -247,11 +247,11 @@ class Router:
 
 class Network:
     router_dictionary: Dict[str, Router]
-    edges: List[Edge]
+    edge_list: List[Edge]
 
     def __init__(self, vis=None):
         self.router_dictionary = {}
-        self.edges = []
+        self.edge_list = []
         self.vis = vis
 
     def add_router(self, router: Router):
@@ -278,14 +278,14 @@ class Network:
             Edge -- The Edge object created for this connection."""
         edge = Edge(self.router_dictionary[x].device, self.router_dictionary[y].device, ticks_for_data_passthrough)
         edge.set_callback(self.update_vis_with_packet)
-        self.edges.append(edge)
+        self.edge_list.append(edge)
         self.router_dictionary[x].register_edge(self.router_dictionary[y], edge)
         self.router_dictionary[y].register_edge(self.router_dictionary[x], edge)
         return edge
 
     def network_tick(self):
         """Ticks all edges."""
-        for edge in self.edges:
+        for edge in self.edge_list:
             edge.tick()
 
     def update_vectors(self):
