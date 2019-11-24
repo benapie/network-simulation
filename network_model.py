@@ -231,7 +231,6 @@ class Router:
         self.distances.pop(packet.from_addr)
         del self.to[to_del]
         self.to = {to: thru for (to, thru) in self.to.items() if thru != to_del}
-        self.device.remove_edge(to_del)
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router."""
@@ -281,6 +280,12 @@ class Network:
     def delete_router(self, addr: str):
         """Deletes a router"""
         self.router_dictionary[addr].send_del()
+        edge = 0
+        while edge < len(self.edges):
+            if self.edges[edge].a.router.address == addr or self.edges[edge].b.router.address == addr:
+                del self.edges[edge]
+            else:
+                edge += 1
         del self.router_dictionary[addr]
 
     def link(self, x: str, y: str, ticks_for_data_passthrough: int) -> Edge:
