@@ -56,16 +56,29 @@ def main():
     start_time = time.time()
     frame_rate = 50
     frame_count = 0
+    mode_text = Text(Point(10, 10), "")
+    mode_text.setTextColor("white")
+    mode_text.draw(vis.window)
     while True:
         frame_count += 1
         time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
         vis.tick()
         mouse = vis.window.checkMouse()
+        key = vis.window.checkKey()
+        if key != "":
+            if key == "r":
+                mode_text.setText("r")
+            if key == "Escape":
+                mode_text.setText("")
+        if mouse is not None:
+            if mode_text.getText() == "r":
+                nearest_router = vis.get_closest_node(mouse.x, mouse.y)
+                vis.network.remove_node_by_label(nearest_router)
+                network.delete_router(nearest_router)
         network.network_tick()
         if frame_count % (frame_rate * 20) == 0:
             network.update_vectors()
         if frame_count % 30 == 0:
-            # find a random pair
             router_a_address, router_b_address = "1", "1"
             while router_a_address == router_b_address:
                 router_a_address = random.choice(list(network.router_dictionary.keys()))

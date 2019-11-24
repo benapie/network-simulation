@@ -139,7 +139,19 @@ class Visualisation:
 
     def update_edge_queue(self, node_a_label, node_b_label, queue_length):
         if self.network.edge_exist_by_labels(node_a_label, node_b_label):
-            self.network.get_edge_by_labels(node_a_label, node_b_label).line.setFill(color_rgb(255, int(255 * self.color_curve(queue_length)), int(255 * self.color_curve(queue_length))))
+            self.network.get_edge_by_labels(node_a_label, node_b_label).line.setFill(
+                color_rgb(255, int(255 * self.color_curve(queue_length)), int(255 * self.color_curve(queue_length))))
+
+    def get_closest_node(self, x, y):
+        min_node = self.network.node_list[0]
+        min_distance = math.pow(math.pow(min_node.x - x, 2) + math.pow(min_node.y - y, 2), 0.5)
+        for node in self.network.node_list:
+            distance = math.pow(math.pow(node.x - x, 2) + math.pow(node.y - y, 2), 0.5)
+            if distance < min_distance:
+                min_node = node
+                min_distance = distance
+        return min_node.label
+
 
 
 def circle_arrangement(r, x, y, node_label_list, edge_label_list):
