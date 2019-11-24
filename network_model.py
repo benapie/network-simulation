@@ -231,9 +231,10 @@ class Network:
     router_dictionary: Dict[str, Router]
     edges: List[Edge]
 
-    def __init__(self):
+    def __init__(self, vis):
         self.router_dictionary = {}
         self.edges = []
+        self.vis = vis
 
     def add_router(self, router: Router):
         self.router_dictionary[router.address] = router
@@ -271,3 +272,6 @@ class Network:
     def update_vectors(self):
         for router in self.router_dictionary:
             self.router_dictionary[router].send_distance_vector()
+
+    def update_vis_with_packet(self, node_a, node_b, ticks):
+        pass
