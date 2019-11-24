@@ -81,6 +81,9 @@ class Device:
     def __str__(self):
         return "D#" + str(self.router)
 
+    def remove_edge(self, address: str):
+        del self.edges[address]
+
 
 # Packet stands alone, should not be doing **anything** should just sit there and take it!
 class Packet:
@@ -184,11 +187,16 @@ class Router:
             if packet.data["HEAD"] == "DV":
                 self.update_distance_vector(packet)  # accept DV packet as something to process independently
             elif packet.data["HEAD"] == "DEL":
-                self.distances.pop(packet.from_addr)
+                self.remove_router(packet)
             else:
                 self.transport_receive(packet)
         else:
             self.device.send_data(packet, self.where_to(packet))  # routes packet to next hop if that's what's needed
+
+    def remove_router(self, packet):
+        self.distances.pop(packet.from_addr)
+        self.send_distance_vector()
+        self.device.remove_edge(packet.from_addr)
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router."""
@@ -236,7 +244,6 @@ class Network:
     def delete_router(self, addr: str):
         """Deletes a router"""
         self.router_list[addr].send_del()
-        # todo: when delete packet received delete edge!
         del self.router_list[addr]
 
     def link_to(self, x: Router, y: Router, ticks_for_data_passthrough: int) -> Edge:
