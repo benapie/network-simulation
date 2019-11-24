@@ -319,8 +319,6 @@ class Network:
 
     def network_tick(self):
         """Ticks all edges."""
-        for router in self.router_dictionary:
-            print(self.router_dictionary[router].distances)
         for edge in self.edges:
             edge.tick()
 
