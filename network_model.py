@@ -306,8 +306,8 @@ class Network:
                                ticks: int, packet_number: int):
         """ Updates vis with the packets being sent this tick """
         if self.vis is not None:
-            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_number)
+            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_ratio)
 
     def update_vis_with_queues(self, router_from_address: str, router_to_address: str, queue_length: int):
-        """ Updates vis with the number of packets in an edge queue. Pls send a int also edge identified with nodes"""
+        """ Updates vis with the number of packets in an edge queue. Pls send a int also edge identified with nodes """
         self.vis.update_edge_queue(router_from_address, router_to_address, queue_length)
