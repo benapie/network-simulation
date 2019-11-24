@@ -42,6 +42,18 @@ class GraphicNetwork:
             new_edge.line.draw(self.window)
             self.edge_list.append(new_edge)
 
+    def edge_exist_by_labels(self, node_a_label, node_b_label):
+        for edge in self.edge_list:
+            if edge.node_a_label == node_a_label and edge.node_b_label == node_b_label:
+                return True
+        return False
+
+    def get_edge_by_labels(self, node_a_label, node_b_label):
+        for edge in self.edge_list:
+            if edge.node_a_label == node_a_label and edge.node_b_label == node_b_label:
+                return edge
+        return None
+
     def get_node_by_label(self, node_label):
         for node in self.node_list:
             if node.label == node_label:
@@ -121,6 +133,12 @@ class Visualisation:
         packet.square.draw(self.window)
 
         self.packet_list.append(packet)
+
+    def update_edge_queue(self, node_a_label, node_b_label, queue_length):
+        pass
+        # print(node_a_label, node_b_label)
+        # if self.network.edge_exist_by_labels(node_a_label, node_b_label):
+        #     self.network.get_edge_by_labels(node_a_label, node_b_label).line.setFill("red")
 
 
 def circle_arrangement(r, x, y, node_label_list, edge_label_list):
