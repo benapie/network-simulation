@@ -36,6 +36,12 @@ class GraphicNetwork:
             else:
                 self.node_list.append(new_node)
 
+    def add_edge(self, new_edge):
+        inverted_edge = GraphicEdge(new_edge.node_b, new_edge.nobe_a)
+        if new_edge not in self.edge_list and inverted_edge not in self.edge_list:
+            new_edge.line.draw(self.window)
+            self.edge_list.append(new_edge)
+
     def get_node_by_label(self, node_label):
         for node in self.node_list:
             if node.label == node_label:
