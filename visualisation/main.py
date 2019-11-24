@@ -186,7 +186,8 @@ class Visualisation:
         node_distance_list = sorted(node_distance_list, key=lambda x: x[1])[1:]
         node_list = []
         for node_distance in node_distance_list:
-            node_list.append(node_distance[0])
+            if node_distance[1] != 0:
+                node_list.append(node_distance[0])
         return node_list[:count]
 
 
