@@ -74,7 +74,7 @@ def main():
             while router_a_address == router_b_address:
                 router_a_address = random.choice(list(network.router_dictionary.keys()))
                 router_b_address = random.choice(list(network.router_dictionary.keys()))
-            network.router_dictionary[router_a_address].transport_send("123", router_b_address)
+            network.router_dictionary[router_a_address].transport_send(long_str, router_b_address)
 
 
 main()

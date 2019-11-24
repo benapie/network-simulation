@@ -54,7 +54,7 @@ class Edge:
             self.packet_callback((self.a if transit_data.target != self.a else self.b).router.address,
                                  transit_data.target.router.address, transit_data.data.from_addr,
                                  transit_data.num_ticks,
-                                 transit_data.data.data["S_NUM"]/float(transit_data.data.data["NUM_P"]))
+                                 (transit_data.data.data["S_NUM"]+1)/float(transit_data.data.data["NUM_P"]))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
@@ -246,7 +246,8 @@ class Router:
     def send_del(self):
         """Sends a delete packet to neighbours"""
         for neighbour in self.neighbours:
-            self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys", "S_NUM": 0, "NUM_P": 1})
+            self.send_new_packet(neighbour.address,
+                                 {"HEAD": "DEL", "CONTENT": "It's been fun boys", "S_NUM": 0, "NUM_P": 1})
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
@@ -311,7 +312,7 @@ class Network:
             self.router_dictionary[router].send_distance_vector()
 
     def update_vis_with_packet(self, router_from_address: str, router_to_address: str, router_color_address: str,
-                               ticks: int, packet_number: int):
+                               ticks: int, packet_ratio: float):
         """ Updates vis with the packets being sent this tick """
         if self.vis is not None:
             self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_ratio)
