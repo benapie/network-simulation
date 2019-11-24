@@ -134,11 +134,12 @@ class Visualisation:
 
         self.packet_list.append(packet)
 
+    def color_curve(self, x):
+        return math.pow(math.e, -1 * math.pow(3, -1) * x)
+
     def update_edge_queue(self, node_a_label, node_b_label, queue_length):
-        pass
-        # print(node_a_label, node_b_label)
-        # if self.network.edge_exist_by_labels(node_a_label, node_b_label):
-        #     self.network.get_edge_by_labels(node_a_label, node_b_label).line.setFill("red")
+        if self.network.edge_exist_by_labels(node_a_label, node_b_label):
+            self.network.get_edge_by_labels(node_a_label, node_b_label).line.setFill(color_rgb(255, int(255 * self.color_curve(queue_length)), int(255 * self.color_curve(queue_length))))
 
 
 def circle_arrangement(r, x, y, node_label_list, edge_label_list):
