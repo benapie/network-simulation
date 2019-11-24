@@ -1,6 +1,7 @@
-from visualisation.graphics import *
 import math
 import random
+
+from visualisation.graphics import *
 
 
 class Node:
