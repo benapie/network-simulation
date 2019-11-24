@@ -303,7 +303,10 @@ class Network:
 
     def update_vis_with_packet(self, router_from_address: str, router_to_address: str, router_color_address: str,
                                ticks: int, packet_ratio: float):
-        """ Updates vis with the packets being sent this tick, packet_ratio = packet_number / total_number_of_packets """
+        """
+            Updates vis with the packets being sent this tick,
+            packet_ratio = packet_number / total_number_of_packets
+        """
         if self.vis is not None:
             self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_number)
 
