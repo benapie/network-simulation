@@ -127,7 +127,7 @@ class Router:
 
     def transport_send(self, content: str, to_addr: str):
         if len(self.to) == 0:
-            pass
+            return
         """Splits the content into packets and sends them"""
         # Each packet is of length 255 (§) is added to pad packets of length < 255
         # Each packet has a sequence number S_NUM (for reconstruction)
