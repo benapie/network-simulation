@@ -49,7 +49,7 @@ class Edge:
             self.callback((self.a if transit_data.target != self.a else self.b).router.address,
                           transit_data.target.router.address, transit_data.data.from_addr,
                           self.ticks_for_data_passthrough,
-                          transit_data.data.data["S_NUM"] / float(transit_data.data.data["NUM_P"]))
+                          (transit_data.data.data["S_NUM"] + 1) / float(transit_data.data.data["NUM_P"]))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
@@ -308,7 +308,7 @@ class Network:
                                ticks: int, packet_ratio: float):
         """ Updates vis with the packets being sent this tick """
         if self.vis is not None:
-            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, 1)
+            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_ratio)
 
     def update_vis_with_queues(self, router_from_address: str, router_to_address: str, queue_length: int):
         """ Updates vis with the number of packets in an edge queue. Pls send a int also edge identified with nodes """
