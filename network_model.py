@@ -47,7 +47,7 @@ class Edge:
         self.data_in_transit = transit_data
         if self.callback is not None:
             self.callback((self.a if transit_data.target != self.a else self.b).router.address,
-                          transit_data.target.router.address, transit_data.data.from_addr,  transit_data.data["S_NUM"]/float(transit_data.data["NUM_P"]))
+                          transit_data.target.router.address, transit_data.data.from_addr,  transit_data.data.data["S_NUM"]/float(transit_data.data.data["NUM_P"]))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
