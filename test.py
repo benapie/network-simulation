@@ -24,6 +24,12 @@ for i in range(333):
     long_str += "xyza"
 
 routers[4].transport_send(long_str, "3")
-for i in range(500):
+i = 0
+while True:
     # print("BEFORE TICK", i)
+    if i % 500 == 0:
+        network.update_vectors()
+    if i == 750:
+        network.delete_router("2")
     network.network_tick()
+    i += 1
