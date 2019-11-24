@@ -3,8 +3,10 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
+network = Network()
 routers = [Router("0"), Router("1"), Router("2"), Router("3"), Router("4"), Router("5")]
-network = Network(routers)
+for router in routers:
+    network.add_router(router)
 network.link_to(routers[0], routers[1], 12)
 network.link_to(routers[0], routers[2], 5)
 network.link_to(routers[0], routers[3], 5)
