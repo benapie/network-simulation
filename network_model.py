@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Optional, Deque
 import math
+from collections import deque
 from random import Random
 import random
 
@@ -10,7 +11,8 @@ class Edge:
     b: Device
     ticks_for_data_passthrough: int
     curr_tick: int
-    data_in_transit: List[Edge.TransitData]
+    data_in_transit: Optional[Edge.TransitData]
+    data_waiting: Deque[Edge.TransitData]
     main_rng: Random
 
     class TransitData:
@@ -26,23 +28,30 @@ class Edge:
         self.a = a
         self.b = b
         self.ticks_for_data_passthrough = ticks_for_data_passthrough
-        self.data_in_transit = []
+        self.data_in_transit = None
+        self.data_waiting = deque()
         self.main_rng = Random()
         self.curr_tick = 0
 
     def send_data_through(self, data, sender: Device):
-        end_tick = self.curr_tick + self.ticks_for_data_passthrough\
-                   + self.main_rng.randint(0, math.ceil(2.5*self.ticks_for_data_passthrough))
-        self.data_in_transit.append(Edge.TransitData(data, self.a if sender != self.a else self.b, end_tick))
+        end_tick = self.ticks_for_data_passthrough + self.main_rng.randint(0, 3*self.ticks_for_data_passthrough)
+        if self.data_in_transit is None:
+            end_tick += self.curr_tick
+            self.data_in_transit = Edge.TransitData(data, self.a if sender != self.a else self.b, end_tick)
+        else:
+            self.data_waiting.append(Edge.TransitData(data, self.a if sender != self.a else self.b, end_tick))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
         tick along, while also manging sending to the routers if they arrive."""
         self.curr_tick += 1
-        for transit in self.data_in_transit:
-            if transit.end_tick == self.curr_tick:
-                transit.target.accept_data(transit.data, self)
-        self.data_in_transit = [d for d in self.data_in_transit if self.curr_tick < d.end_tick]
+        if self.data_in_transit is not None and self.data_in_transit.end_tick == self.curr_tick:
+            self.data_in_transit.target.accept_data(self.data_in_transit.data, self)
+            if len(self.data_waiting) == 0:
+                self.data_in_transit = None
+            else:
+                self.data_in_transit = self.data_waiting.popleft()
+                self.data_in_transit.end_tick += self.curr_tick
 
     def __str__(self):
         return str(self.a) + " -> " + str(self.b)
@@ -195,7 +204,6 @@ class Router:
         """Sends a delete packet to neighbours"""
         for neighbour in self.neighbours:
             self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys"})
-
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
