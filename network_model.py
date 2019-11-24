@@ -182,8 +182,9 @@ class Router:
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
-        for neighbour in self.neighbours:
-            self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances, "S_NUM": 0, "NUM_P": 1})
+        if len(self.to) > 0:
+            for neighbour in self.neighbours:
+                self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances, "S_NUM": 0, "NUM_P": 1})
 
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent

@@ -93,6 +93,11 @@ def main():
             elif key == "d":
                 if len(vis.network.node_list) > 1:
                     network.update_vectors()
+            elif key == "p":
+                router_list = vis.get_closest_node_label_list(0, 0, len(vis.network.node_list) - 1)
+                for router in router_list:
+                    vis.network.remove_node_by_label(router)
+                    network.delete_router(router)
             elif key == "Escape":
                 mode_text.setText("")
             elif key == "space":
