@@ -30,7 +30,6 @@ class GraphicNetwork:
 
     def add_node(self, new_node):
         for node in self.node_list:
-            print(new_node.label, node.label)
             if new_node.label == node.label:
                 raise ValueError("Error on entry of node to a network. "
                                  "Node label already in the network.")

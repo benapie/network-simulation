@@ -67,7 +67,6 @@ def main():
         mouse = vis.window.checkMouse()
         key = vis.window.checkKey()
         if key != "":
-            print(key)
             if key == "r":
                 mode_text.setText("r")
             elif key == "w":
