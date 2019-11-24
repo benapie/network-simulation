@@ -1,0 +1,30 @@
+Every router is given a string address:
+
+Transport send:
+	Data is split up into packets of length 255. In the event that a packet has length < 255, it is padded with § characters.
+	Packets have two addresses (sender and receiver) as well as some HEAD information specifying what type of packet it its (DATA, DV, or DEL).
+	Packets are also given a sequence number specifying the order they were sent originally (this is to account for random propagation delay from the link layer).
+
+Network send:
+	Routers are aware of their neighbours by default (they have neighbour addresses and distances). Each router maintains two dictionaries: one containing the current best distance to every other node and one containing the next node on the another node (i.e. to['5'] = '4' means that any packet on its way to router '5' should be sent to router '4').
+	Upon creation of a node, its neighbours update their distance and to vectors to include this new node and send out an update. Updates are also triggered for every router at regular intervals.
+	A local update (triggered by a new node being added) involves every neighbour of the new node sending its new distance vector to all of its neighbours.
+	A global update (triggered at regular intervals) involves every node sending its distance vector to all of its neighbours.
+	Upon receiving a distance vector, routers check the received one to see if a new, shorter, route has been found (and if one has, it updates its distance vector).
+	When a router disconnects, it sends a DEL packet to all of its neighbours instructing them to remove it from their distance and to vectors.
+	When new information is created (i.e. a node is generated or destroyed), it takes one update for its neighbours to be made aware, two updates for their neighbours, etc. All in all, it takes d updates for every node to be made aware of new information where d is the diameter of the graph.
+	Once distance vectors are set up and enough updates have been performed, routing a packet is as simple as each router checking its to vector to see where to forward the packet onto until it reaches its destination.
+
+Link send:
+	
+
+Link receive:
+	
+
+Network receive:
+	If the packet is a special packet (i.e. a DEL or DV packet), the necessary action takes place.
+	If the packet's destination address is the router's address, it is sent up to the transport layer. If not, the router's to vector is consulted and the packet is forwarded towards its destination.
+
+Transport receive:
+	Each router stores a list of received packets for each other router on the network. Every time a packet is received it is appended to the sender's queue and the number of items in the queue is checked. If the number of items matches the number of packets in the message (this number is stored in each packet) then the data is reconstructed.
+	Data is reconstructed by simply concatenating the contents into one string based on sequence number.
