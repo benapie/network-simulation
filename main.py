@@ -83,7 +83,15 @@ def main():
                 for node_label in closest_node_list:
                     vis.add_edge_by_labels(str(frame_count), node_label)
                     network.link(str(frame_count), node_label, random.randint(5, 20))
-
+            elif key == "a" and mode_text.getText() == "r":
+                if len(vis.network.node_list) > 1:
+                    x = random.randint(0, width - 1)
+                    y = random.randint(0, height - 1)
+                    nearest_router = vis.get_closest_node(x, y)
+                    vis.network.remove_node_by_label(nearest_router)
+                    network.delete_router(nearest_router)
+            elif key == "d":
+                network.update_vectors()
             elif key == "Escape":
                 mode_text.setText("")
             elif key == "space":
