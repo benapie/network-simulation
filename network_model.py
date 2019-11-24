@@ -267,3 +267,7 @@ class Network:
         """Ticks all edges."""
         for edge in self.edges:
             edge.tick()
+
+    def update_vectors(self):
+        for router in self.router_dictionary:
+            self.router_dictionary[router].send_distance_vector()
