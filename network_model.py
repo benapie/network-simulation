@@ -189,8 +189,8 @@ class Router:
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
-        if dv_packet.from_addr in self.distances:
-            for node in dv_packet.data["CONTENT"]:
+        if dv_packet.from_addr in self.distances:   # This is the most ridiculous line of code I have ever written.
+            for node in dv_packet.data["CONTENT"]:  # Who would've thought of that glitch?
                 if node not in self.distances:
                     self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
                     self.to[node] = dv_packet.from_addr
