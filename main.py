@@ -36,7 +36,7 @@ width = 500
 router_label_list, link_labels_list = randomly_generate_network()
 link_delays = []
 for i in range(len(link_labels_list)):
-    link_delays.append(random.randint(4, 15))
+    link_delays.append(random.randint(20, 40))
 
 node_list, edge_list = circle_arrangement(width / 2 - 20, width / 2, width / 2, router_label_list, link_labels_list)
 graphic_network = GraphicNetwork(node_list, edge_list)
