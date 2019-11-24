@@ -105,17 +105,18 @@ class Visualisation:
             packet.square.undraw()
             self.packet_list.remove(packet)
 
-    def send_packet(self, node_a_label, node_b_label, frame_count, outline_opacity=1):
+    def send_packet(self, node_a_label, node_b_label, node_origin_label, frame_count, outline_opacity=1):
         """ Visualises a packet going from node A to node B """
         # find the nodes
         node_a = self.network.get_node_by_label(node_a_label)
         node_b = self.network.get_node_by_label(node_b_label)
+        node_origin = self.network.get_node_by_label(node_origin_label)
         packet = Packet(node_a.circle.getCenter().x,
                         node_a.circle.getCenter().y,
                         node_b.circle.getCenter().x,
                         node_b.circle.getCenter().y,
                         frame_count,
-                        node_a.color,
+                        node_origin.color,
                         outline_opacity)
         packet.square.draw(self.window)
 
@@ -153,7 +154,7 @@ def circle_arrangement(r, x, y, node_label_list, edge_label_list):
     return node_list, edge_list
 
 
-def randomly_generate_network(node_count_lower_bound = 10, node_count_upper_bound = 20):
+def randomly_generate_network(node_count_lower_bound=10, node_count_upper_bound=20):
     """
         Randomly generates a list of nodes (A-Z) and edges
         :return: (node_label_list, edge_label_list) where edge_label_list = [node_a.label, node_b.label]
