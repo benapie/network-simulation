@@ -14,6 +14,7 @@ class Node:
         self.color = color_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         self.circle.setFill(self.color)
 
+
 class Edge:
     def __init__(self, node_a, node_b):
         self.node_a_label = node_a.label
@@ -98,7 +99,7 @@ class Visualisation:
             packet.square.undraw()
             self.packet_list.remove(packet)
 
-    def send_packet(self, node_a_label, node_b_label, frame_count, packet_label="1"):
+    def send_packet(self, node_a_label, node_b_label, frame_count, outline_opacity=1):
         """ Visualises a packet going from node A to node B """
         # find the nodes
         node_a = self.network.get_node_by_label(node_a_label)
@@ -108,7 +109,8 @@ class Visualisation:
                         node_b.circle.getCenter().x,
                         node_b.circle.getCenter().y,
                         frame_count,
-                        packet_label)
+                        node_a.color,
+                        outline_opacity)
         packet.square.draw(self.window)
 
         self.packet_list.append(packet)
@@ -171,11 +173,12 @@ def randomly_generate_network():
 
 class Packet:
     def __init__(self, node_a_position_x, node_a_position_y, node_b_position_x, node_b_position_y, frame_count_max,
-                 packet_label=""):
+                 color="black", outline_opacity=1.):
         self.square = Rectangle(Point(node_a_position_x - 5, node_a_position_y - 5),
                                 Point(node_a_position_x + 5, node_a_position_y + 5))
-        self.square.setFill("black")
-        self.square.setOutline("white")
+        self.square.setFill(color)
+        self.square.setOutline(
+            color_rgb(int(255 * outline_opacity), int(255 * outline_opacity), int(255 * outline_opacity)))
         self.dx = (node_b_position_x - node_a_position_x) / frame_count_max
         self.dy = (node_b_position_y - node_a_position_y) / frame_count_max
         self.frame_count = 0
@@ -189,9 +192,8 @@ class Packet:
 
 def main():
     start_time = time.time()
-    frame_rate = 60
+    frame_rate = 50
     frame_count = 0
-    debug = 0
     while True:
         frame_count += 1
         time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
