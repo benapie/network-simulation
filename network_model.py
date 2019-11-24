@@ -47,7 +47,7 @@ class Edge:
         self.data_in_transit = transit_data
         if self.callback is not None:
             self.callback((self.a if transit_data.target != self.a else self.b).router.address,
-                          transit_data.target.router.address, transit_data.data.from_addr,  transit_data.num_ticks)
+                          transit_data.target.router.address, transit_data.data.from_addr, transit_data.num_ticks)
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
@@ -67,7 +67,6 @@ class Edge:
             else:
                 self.change_transit_data(self.data_waiting.popleft())
 
-
     def __str__(self):
         return str(self.a) + " -> " + str(self.b)
 
@@ -86,11 +85,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        #print("Sending data", data, "to", target)
+        # print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        #print("Received data", data, "from edge", src)
+        # print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
@@ -132,8 +131,8 @@ class Router:
         self.packet_queues = {}
 
     def application_receive(self, data):
-        #print(data)
-        #print(self.address)
+        # print(data)
+        # print(self.address)
         pass
 
     def transport_send(self, content: str, to_addr: str):
@@ -303,8 +302,8 @@ class Network:
             self.router_dictionary[router].send_distance_vector()
 
     def update_vis_with_packet(self, router_from_address: str, router_to_address: str, router_color_address: str,
-                               ticks: int, packet_number: int):
-        """ Updates vis with the packets being sent this tick """
+                               ticks: int, packet_ratio: float):
+        """ Updates vis with the packets being sent this tick, packet_ratio = packet_number / total_number_of_packets """
         if self.vis is not None:
             self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_number)
 
