@@ -47,7 +47,9 @@ class Edge:
         self.data_in_transit = transit_data
         if self.callback is not None:
             self.callback((self.a if transit_data.target != self.a else self.b).router.address,
-                          transit_data.target.router.address, transit_data.data.from_addr,  self.ticks_for_data_passthrough, transit_data.data.data["S_NUM"]/float(transit_data.data.data["NUM_P"]))
+                          transit_data.target.router.address, transit_data.data.from_addr,
+                          self.ticks_for_data_passthrough,
+                          transit_data.data.data["S_NUM"] / float(transit_data.data.data["NUM_P"]))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
@@ -67,7 +69,6 @@ class Edge:
             else:
                 self.change_transit_data(self.data_waiting.popleft())
 
-
     def __str__(self):
         return str(self.a) + " -> " + str(self.b)
 
@@ -86,11 +87,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        #print("Sending data", data, "to", target)
+        # print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        #print("Received data", data, "from edge", src)
+        # print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
@@ -132,8 +133,8 @@ class Router:
         self.packet_queues = {}
 
     def application_receive(self, data):
-        #print(data)
-        #print(self.address)
+        # print(data)
+        # print(self.address)
         pass
 
     def transport_send(self, content: str, to_addr: str):
@@ -239,7 +240,8 @@ class Router:
     def send_del(self):
         """Sends a delete packet to neighbours"""
         for neighbour in self.neighbours:
-            self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys", "S_NUM": 0, "NUM_P": 1})
+            self.send_new_packet(neighbour.address,
+                                 {"HEAD": "DEL", "CONTENT": "It's been fun boys", "S_NUM": 0, "NUM_P": 1})
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
@@ -303,10 +305,10 @@ class Network:
             self.router_dictionary[router].send_distance_vector()
 
     def update_vis_with_packet(self, router_from_address: str, router_to_address: str, router_color_address: str,
-                               ticks: int, packet_number: int):
+                               ticks: int, packet_ratio: float):
         """ Updates vis with the packets being sent this tick """
         if self.vis is not None:
-            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, packet_ratio)
+            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks, 1)
 
     def update_vis_with_queues(self, router_from_address: str, router_to_address: str, queue_length: int):
         """ Updates vis with the number of packets in an edge queue. Pls send a int also edge identified with nodes """
