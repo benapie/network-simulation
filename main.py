@@ -27,10 +27,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 width = 500
 
-router_label_list = ["0", "1", "2", "3", "4", "5"]
-link_labels_list = [("0", "1"), ("0", "2"), ("0", "3"), ("2", "1"), ("1", "4")]
-link_delays = [12, 5, 5, 6, 7]
+# router_label_list = ["0", "1", "2", "3", "4", "5"]
+# link_labels_list = [("0", "1"), ("0", "2"), ("0", "3"), ("2", "1"), ("1", "4")]
+# link_delays = []
+# for i in range(len(link_labels_list)):
+#     link_delays.append(random.randint(4, 15))
 
+router_label_list, link_labels_list = randomly_generate_network()
+link_delays = []
+for i in range(len(link_labels_list)):
+    link_delays.append(random.randint(4, 15))
 
 node_list, edge_list = circle_arrangement(width / 2 - 20, width / 2, width / 2, router_label_list, link_labels_list)
 graphic_network = GraphicNetwork(node_list, edge_list)
@@ -43,20 +49,11 @@ for router_label in router_label_list:
     network.add_router(Router(router_label))
 
 for i in range(0, len(link_labels_list)):
-    network.link(link_labels_list[i][0], link_labels_list[i][1],
-                 link_delays[i])  # todo change to addresses
-
-
-for _ in range(10):
-    for i in network.router_dictionary:
-        network.router_dictionary[i].send_distance_vector()
-    for _ in range(100):
-        network.network_tick()
+    network.link(link_labels_list[i][0], link_labels_list[i][1], link_delays[i])
 
 long_str = ""
 for i in range(333):
     long_str += "xyza"
-
 
 
 def main():
@@ -67,13 +64,18 @@ def main():
         frame_count += 1
         time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
         vis.tick()
-        vis.window.checkMouse()
+        mouse = vis.window.checkMouse()
         network.network_tick()
-        if frame_count % 100 == 0:
+        if frame_count % (frame_rate * 10) == 0:
+            network.update_vectors()
+        if frame_count % 1 == 0:
             # find a random pair
-            edge = network.edges[random.randint(0, len(network.edges) - 1)]
-            network.router_dictionary[edge.a.router.address].transport_send("123", edge.b.router.address)
-            vis.send_packet(edge.a.router.address, edge.b.router.address, 10)
+            router_a_address, router_b_address = "1", "1"
+            while router_a_address == router_b_address:
+                router_a_address = random.choice(list(network.router_dictionary.keys()))
+                router_b_address = random.choice(list(network.router_dictionary.keys()))
+            network.router_dictionary[router_a_address].transport_send("123", router_b_address)
+
 
 main()
 
