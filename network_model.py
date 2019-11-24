@@ -288,6 +288,6 @@ class Network:
         for router in self.router_dictionary:
             self.router_dictionary[router].send_distance_vector()
 
-    def update_vis_with_packet(self, router_a_address: str, router_b_address: str, ticks: int):
+    def update_vis_with_packet(self, router_from_address: str, router_to_address: str, ticks: int):
         if self.vis is not None:
-            self.vis.send_packet(router_a_address, router_b_address, ticks)
+            self.vis.send_packet(router_from_address, router_to_address, ticks)
