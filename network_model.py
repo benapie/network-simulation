@@ -50,7 +50,7 @@ class Edge:
             transit_data = self.data_waiting.popleft()
             self.queue_changed()
         self.data_in_transit = transit_data
-        if self.packet_callback is not None:
+        if self.packet_callback is not None and self.data_in_transit is not None:
             self.packet_callback((self.a if transit_data.target != self.a else self.b).router.address,
                                  transit_data.target.router.address, transit_data.data.from_addr,
                                  transit_data.num_ticks,
