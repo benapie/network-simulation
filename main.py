@@ -26,6 +26,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 width = 750
+height = 750
 
 # router_label_list = ["0", "1", "2", "3", "4", "5"]
 # link_labels_list = [("0", "1"), ("0", "2"), ("0", "3"), ("2", "1"), ("1", "4")]
@@ -33,7 +34,7 @@ width = 750
 # for i in range(len(link_labels_list)):
 #     link_delays.append(random.randint(4, 15))
 
-router_label_list, link_labels_list = randomly_generate_network()
+router_label_list, link_labels_list = randomly_generate_network(1, 1)
 link_delays = []
 for i in range(len(link_labels_list)):
     link_delays.append(random.randint(5, 40))
@@ -51,7 +52,6 @@ for router_label in router_label_list:
 for i in range(0, len(link_labels_list)):
     network.link(link_labels_list[i][0], link_labels_list[i][1], link_delays[i])
 
-
 def main():
     start_time = time.time()
     frame_rate = 50
@@ -59,6 +59,7 @@ def main():
     mode_text = Text(Point(10, 10), "")
     mode_text.setTextColor("white")
     mode_text.draw(vis.window)
+
     while True:
         frame_count += 1
         time.sleep(math.pow(frame_rate, -1) - ((time.time() - start_time) % math.pow(frame_rate, -1)))
@@ -77,9 +78,10 @@ def main():
                 vis.window.getKey()
         if mouse is not None:
             if mode_text.getText() == "r":
-                nearest_router = vis.get_closest_node(mouse.x, mouse.y)
-                vis.network.remove_node_by_label(nearest_router)
-                network.delete_router(nearest_router)
+                if len(vis.network.node_list) > 1:
+                    nearest_router = vis.get_closest_node(mouse.x, mouse.y)
+                    vis.network.remove_node_by_label(nearest_router)
+                    network.delete_router(nearest_router)
             elif mode_text.getText() == "w":
                 # Add node
                 vis.add_node(GraphicNode(str(frame_count), mouse.x, mouse.y))
@@ -95,11 +97,11 @@ def main():
             network.update_vectors()
         if frame_count % 30 == 0:
             router_a_address, router_b_address = "1", "1"
-            while router_a_address == router_b_address:
-                router_a_address = random.choice(list(network.router_dictionary.keys()))
-                router_b_address = random.choice(list(network.router_dictionary.keys()))
-            network.router_dictionary[router_a_address].transport_send("."*random.randint(200,1000), router_b_address)
-
+            if len(list(network.router_dictionary.keys())) >= 2:
+                while router_a_address == router_b_address:
+                    router_a_address = random.choice(list(network.router_dictionary.keys()))
+                    router_b_address = random.choice(list(network.router_dictionary.keys()))
+                network.router_dictionary[router_a_address].transport_send("."*random.randint(200, 1000), router_b_address)
 
 main()
 
