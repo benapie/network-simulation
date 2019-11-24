@@ -4,7 +4,7 @@ import random
 from visualisation.graphics import *
 
 
-class Node:
+class GraphicNode:
     def __init__(self, label, x, y, r):
         self.label = label
         self.x = x
@@ -15,7 +15,7 @@ class Node:
         self.circle.setFill(self.color)
 
 
-class Edge:
+class GraphicEdge:
     def __init__(self, node_a, node_b):
         self.node_a_label = node_a.label
         self.node_b_label = node_b.label
@@ -23,7 +23,7 @@ class Edge:
         self.line.setFill("white")
 
 
-class Network:
+class GraphicNetwork:
     def __init__(self, node_list, edge_list):
         self.node_list = node_list
         self.edge_list = edge_list
@@ -133,16 +133,16 @@ def circle_arrangement(r, x, y, node_label_list, edge_label_list):
     node_list = []
     for i in range(0, len(node_label_list)):
         theta = i * math.pi * 2 * math.pow(len(node_label_list), -1)
-        node_list.append(Node(node_label_list[i],  # label
-                              x + (r * math.cos(theta)),  # x coordinate
-                              y + (r * math.sin(theta)),  # y coordinate
-                              10))  # radius
+        node_list.append(GraphicNode(node_label_list[i],  # label
+                                     x + (r * math.cos(theta)),  # x coordinate
+                                     y + (r * math.sin(theta)),  # y coordinate
+                                     10))  # radius
     # Drawing edges
     edge_list = []
     for i in range(0, len(edge_label_list)):
         node_a = node_list[node_label_list.index(edge_label_list[i][0])]
         node_b = node_list[node_label_list.index(edge_label_list[i][1])]
-        edge_list.append(Edge(node_a, node_b))
+        edge_list.append(GraphicEdge(node_a, node_b))
 
     return node_list, edge_list
 
