@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import List, Dict, Optional, Deque
+
 import math
+import random
 from collections import deque
 from random import Random
-import random
+from typing import List, Dict, Optional, Deque
 
 
 class Edge:
@@ -35,7 +36,7 @@ class Edge:
         self.callback = None
 
     def send_data_through(self, data, sender: Device):
-        num_ticks = self.ticks_for_data_passthrough + self.main_rng.randint(0, 3*self.ticks_for_data_passthrough)
+        num_ticks = self.ticks_for_data_passthrough + self.main_rng.randint(0, 3 * self.ticks_for_data_passthrough)
         if self.data_in_transit is None:
             self.change_transit_data(Edge.TransitData(data, self.a if sender != self.a else self.b, num_ticks))
         else:
@@ -134,7 +135,7 @@ class Router:
         # Each packet is sent with a NUM_P specifying the number of packets in content (for reconstruction)
         content.replace("§", "\\§")
         s_num = 0
-        num_p = math.ceil(len(content)/255)
+        num_p = math.ceil(len(content) / 255)
         while len(content) > 255:
             self.send_new_packet(to_addr, {"HEAD": "DATA", "CONTENT": content[:255], "S_NUM": s_num, "NUM_P": num_p})
             content = content[255:]
@@ -291,6 +292,7 @@ class Network:
         for router in self.router_dictionary:
             self.router_dictionary[router].send_distance_vector()
 
-    def update_vis_with_packet(self, router_from_address: str, router_to_address: str, ticks: int):
+    def update_vis_with_packet(self, router_from_address: str, router_to_address: str, router_color_address: str,
+                               ticks: int):
         if self.vis is not None:
-            self.vis.send_packet(router_from_address, router_to_address, ticks)
+            self.vis.send_packet(router_from_address, router_to_address, router_color_address, ticks)
