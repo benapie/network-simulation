@@ -208,7 +208,12 @@ class Router:
         """Return where to send the packet."""
         if packet.to_addr not in self.to:
             return random.choice(list(self.to.values()))
-        return self.to[packet.to_addr]
+        next = self.to[packet.to_addr]
+        for edge in self.device.edges:
+            if self.device.edges[edge].a.router.address == next or self.device.edges[edge].b.router.address == next:
+                if len(self.device.edges[edge].data_waiting) > 10:
+                    return random.choice(list(self.to.values()))
+                return self.to[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
         """Decides what needs to be done with the received packet"""
