@@ -71,10 +71,13 @@ class GraphicNetwork:
                 break
         if found_node is None:
             return
+        edge_death_note = []
         for edge in self.edge_list:
             if found_node == edge.node_a_label or found_node == edge.node_b_label:
+                edge_death_note.append(edge)
                 edge.line.undraw()
-                self.edge_list.remove(edge)
+        for edge in edge_death_note:
+            self.edge_list.remove(edge)
 
     def remove_edge_by_labels(self, node_a_label, node_b_label):
         """ Removes the edge that has node_a_label and node_b_label (could be the opposite way around) """
