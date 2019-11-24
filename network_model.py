@@ -20,7 +20,7 @@ class Edge:
         target: Device
         num_ticks: int
 
-        def __init__(self, data, target: Device, num_ticks: int):
+        def __init__(self, data: Packet, target: Device, num_ticks: int):
             self.data = data
             self.target = target
             self.num_ticks = num_ticks
@@ -53,12 +53,20 @@ class Edge:
         """This will tick an edge along, moving every packet on the edge one
         tick along, while also manging sending to the routers if they arrive."""
         self.curr_tick += 1
+        if self.data_in_transit is not None:
+            self.data_in_transit.data.age += 1
+            if self.data_in_transit.data.age > 1000:
+                if len(self.data_waiting) == 0:
+                    self.data_in_transit = None
+                else:
+                    self.change_transit_data(self.data_waiting.popleft())
         if self.data_in_transit is not None and self.data_in_transit.num_ticks == self.curr_tick:
             self.data_in_transit.target.accept_data(self.data_in_transit.data, self)
             if len(self.data_waiting) == 0:
                 self.data_in_transit = None
             else:
                 self.change_transit_data(self.data_waiting.popleft())
+
 
     def __str__(self):
         return str(self.a) + " -> " + str(self.b)
@@ -78,11 +86,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        print("Sending data", data, "to", target)
+        #print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        print("Received data", data, "from edge", src)
+        #print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
@@ -101,6 +109,7 @@ class Packet:
         self.data = data
         self.from_addr = from_addr
         self.to_addr = to_addr
+        self.age = 0
 
     def __str__(self):
         return str(self.data) + ", " + self.from_addr + " -> " + self.to_addr
@@ -123,8 +132,9 @@ class Router:
         self.packet_queues = {}
 
     def application_receive(self, data):
-        print(data)
-        print(self.address)
+        #print(data)
+        #print(self.address)
+        pass
 
     def transport_send(self, content: str, to_addr: str):
         if len(self.to) == 0:
