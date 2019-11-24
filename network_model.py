@@ -194,9 +194,15 @@ class Router:
             self.device.send_data(packet, self.where_to(packet))  # routes packet to next hop if that's what's needed
 
     def remove_router(self, packet):
+        to_del = packet.from_addr
+        for i in range(len(self.neighbours)):
+            if self.neighbours[i].address == to_del:
+                del self.neighbours[i]
+                break
         self.distances.pop(packet.from_addr)
-        self.send_distance_vector()
-        self.device.remove_edge(packet.from_addr)
+        del self.to[to_del]
+        self.to = {to: thru for (to, thru) in self.to.items() if thru != to_del}
+        self.device.remove_edge(to_del)
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router."""
