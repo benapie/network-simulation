@@ -5,7 +5,7 @@ from visualisation.graphics import *
 
 
 class GraphicNode:
-    def __init__(self, label, x, y, r):
+    def __init__(self, label, x, y, r=10):
         self.label = label
         self.x = x
         self.y = y
@@ -30,17 +30,24 @@ class GraphicNetwork:
 
     def add_node(self, new_node):
         for node in self.node_list:
+            print(new_node.label, node.label)
             if new_node.label == node.label:
                 raise ValueError("Error on entry of node to a network. "
                                  "Node label already in the network.")
             else:
                 self.node_list.append(new_node)
+                return
 
     def add_edge(self, new_edge):
-        inverted_edge = GraphicEdge(new_edge.node_b, new_edge.nobe_a)
+        inverted_edge = GraphicEdge(self.get_node_by_label(new_edge.node_b_label),
+                                    self.get_node_by_label(new_edge.node_a_label))
         if new_edge not in self.edge_list and inverted_edge not in self.edge_list:
-            new_edge.line.draw(self.window)
             self.edge_list.append(new_edge)
+
+    def add_edge_by_labels(self, node_a_label, node_b_label):
+        if self.edge_exist_by_labels(node_a_label, node_b_label):
+            return
+        self.add_edge(self.get_node_by_label(node_a_label), self.get_node_by_label(node_b_label))
 
     def edge_exist_by_labels(self, node_a_label, node_b_label):
         for edge in self.edge_list:
@@ -120,6 +127,16 @@ class Visualisation:
             packet.square.undraw()
             self.packet_list.remove(packet)
 
+    def add_node(self, new_node):
+        new_node.circle.draw(self.window)
+        self.network.add_node(new_node)
+
+    def add_edge_by_labels(self, node_a, node_b):
+        if not self.network.edge_exist_by_labels(node_a, node_b):
+            edge = GraphicEdge(self.network.get_node_by_label(node_a), self.network.get_node_by_label(node_b))
+            edge.line.draw(self.window)
+            self.network.add_edge(edge)
+
     def send_packet(self, node_a_label, node_b_label, node_origin_label, frame_count, outline_opacity=1):
         """ Visualises a packet going from node A to node B """
         # find the nodes
@@ -159,6 +176,18 @@ class Visualisation:
                 min_distance = distance
         return min_node.label
 
+    def get_closest_node_label_list(self, x, y, count):
+        count = min(count, len(self.network.node_list) - 1)
+        node_distance_list = []
+        for node in self.network.node_list:
+            distance = math.pow(math.pow(node.x - x, 2) + math.pow(node.y - y, 2), 0.5)
+            node_distance_list.append((node.label, distance))
+
+        node_distance_list = sorted(node_distance_list, key=lambda x: x[1])[1:]
+        node_list = []
+        for node_distance in node_distance_list:
+            node_list.append(node_distance[0])
+        return node_list[:count]
 
 
 def circle_arrangement(r, x, y, node_label_list, edge_label_list):
