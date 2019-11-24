@@ -32,7 +32,7 @@ width = 500
 router_label_list = ["0", "1", "2", "3", "4"]
 link_labels_list = [("0", "1"), ("0", "2"), ("0", "3"), ("2", "1"), ("1", "4")]
 
-network = Network([])
+network = Network()
 
 # for router_label in router_label_list:
 #     network.router_list.append(Router(router_label))
