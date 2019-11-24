@@ -188,21 +188,15 @@ class Router:
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
-        to_remove = []
-        for node in self.to:
-            if self.to[node] == dv_packet.from_addr and node not in dv_packet.data["CONTENT"]:
-                to_remove.append(node)
-        for node in to_remove:
-            self.to.pop(node)
-            self.distances.pop(node)
-        for node in dv_packet.data["CONTENT"]:
-            if node not in self.distances:
-                self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
-                self.to[node] = dv_packet.from_addr
-            else:
-                if self.distances[node] > dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]:
+        if dv_packet.from_addr in self.device.edges:
+            for node in dv_packet.data["CONTENT"]:
+                if node not in self.distances:
                     self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
                     self.to[node] = dv_packet.from_addr
+                else:
+                    if self.distances[node] > dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]:
+                        self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
+                        self.to[node] = dv_packet.from_addr
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
