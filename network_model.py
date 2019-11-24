@@ -273,5 +273,5 @@ class Network:
         for router in self.router_dictionary:
             self.router_dictionary[router].send_distance_vector()
 
-    def update_vis_with_packet(self, node_a, node_b, ticks):
-        pass
+    def update_vis_with_packet(self, router_a_address, router_b_address, ticks):
+        self.vis.send_packet(router_a_address, router_b_address, ticks)
