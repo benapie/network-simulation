@@ -66,10 +66,13 @@ def main():
         mouse = vis.window.checkMouse()
         key = vis.window.checkKey()
         if key != "":
+            print(key)
             if key == "r":
                 mode_text.setText("r")
-            if key == "Escape":
+            elif key == "Escape":
                 mode_text.setText("")
+            elif key == "space":
+                vis.window.getKey()
         if mouse is not None:
             if mode_text.getText() == "r":
                 nearest_router = vis.get_closest_node(mouse.x, mouse.y)

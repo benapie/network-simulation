@@ -123,6 +123,10 @@ class Visualisation:
         node_a = self.network.get_node_by_label(node_a_label)
         node_b = self.network.get_node_by_label(node_b_label)
         node_origin = self.network.get_node_by_label(node_origin_label)
+
+        if None in [node_a, node_b, node_origin]:
+            return
+
         packet = Packet(node_a.circle.getCenter().x,
                         node_a.circle.getCenter().y,
                         node_b.circle.getCenter().x,
