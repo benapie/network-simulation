@@ -116,7 +116,7 @@ def main():
         network.network_tick()
         if frame_count % (frame_rate * 20) == 0:
             network.update_vectors()
-        if frame_count % 30 == -1:
+        if frame_count % 30 == 0:
             router_a_address, router_b_address = "1", "1"
             if len(list(network.router_dictionary.keys())) >= 2:
                 while router_a_address == router_b_address:
