@@ -50,6 +50,7 @@ class Edge:
                           transit_data.target.router.address, transit_data.data.from_addr,
                           self.ticks_for_data_passthrough,
                           (transit_data.data.data["S_NUM"] + 1) / float(transit_data.data.data["NUM_P"]))
+            # I am going to keep pushing so people have to merge
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
