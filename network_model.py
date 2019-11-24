@@ -47,7 +47,7 @@ class Edge:
         self.data_in_transit = transit_data
         if self.callback is not None:
             self.callback((self.a if transit_data.target != self.a else self.b).router.address,
-                          transit_data.target.router.address, transit_data.data.from_addr,  transit_data.num_ticks)
+                          transit_data.target.router.address, transit_data.data.from_addr,  transit_data.data["S_NUM"]/float(transit_data.data["NUM_P"]))
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
@@ -176,7 +176,7 @@ class Router:
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
         for neighbour in self.neighbours:
-            self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances})
+            self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances, "S_NUM": 0, "NUM_P": 1})
 
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
@@ -239,7 +239,7 @@ class Router:
     def send_del(self):
         """Sends a delete packet to neighbours"""
         for neighbour in self.neighbours:
-            self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys"})
+            self.send_new_packet(neighbour.address, {"HEAD": "DEL", "CONTENT": "It's been fun boys", "S_NUM": 0, "NUM_P": 1})
 
     def send_new_packet(self, addr: str, data):
         """Sends data to addr. If this is unknown,
