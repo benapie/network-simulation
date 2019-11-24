@@ -279,7 +279,17 @@ class Network:
 
     def delete_router(self, addr: str):
         """Deletes a router"""
-        self.router_dictionary[addr].send_del()
+        to_remove = []
+        for router in self.router_dictionary:
+            if addr in self.router_dictionary[router].distances:
+                del self.router_dictionary[router].distances[addr]
+            if addr in self.router_dictionary[router].to:
+                del self.router_dictionary[router].to[addr]
+            for node in self.router_dictionary[router].to:
+                if self.router_dictionary[node] == addr:
+                    to_remove.append(node)
+        for node in to_remove:
+            del self.router_dictionary[node]
         edge = 0
         while edge < len(self.edges):
             if self.edges[edge].a.router.address == addr or self.edges[edge].b.router.address == addr:
@@ -309,6 +319,8 @@ class Network:
 
     def network_tick(self):
         """Ticks all edges."""
+        for router in self.router_dictionary:
+            print(self.router_dictionary[router].distances)
         for edge in self.edges:
             edge.tick()
 
