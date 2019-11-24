@@ -72,6 +72,19 @@ def main():
                 mode_text.setText("r")
             elif key == "w":
                 mode_text.setText("w")
+            elif key == "a" and mode_text.getText() == "w":
+                # Add node
+                x = random.randint(0, width - 1)
+                y = random.randint(0, height - 1)
+                vis.add_node(GraphicNode(str(frame_count), x, y))
+                network.add_router(Router(str(frame_count)))
+
+                # Get closest 2-4 nodes
+                closest_node_list = vis.get_closest_node_label_list(x, y, random.randint(2, 4))
+                for node_label in closest_node_list:
+                    vis.add_edge_by_labels(str(frame_count), node_label)
+                    network.link(str(frame_count), node_label, random.randint(5, 20))
+
             elif key == "Escape":
                 mode_text.setText("")
             elif key == "space":
