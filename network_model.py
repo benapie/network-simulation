@@ -189,9 +189,7 @@ class Router:
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
         if packet.to_addr not in self.to:
-            if len(self.to) > 0:
-                return random.choice(list(self.to.values()))
-            # todo: very weakly connected
+            return random.choice(list(self.to.values()))
         return self.to[packet.to_addr]
 
     def receive_packet(self, packet: Packet):
