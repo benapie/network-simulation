@@ -1,7 +1,6 @@
 from visualisation.graphics import *
 import math
 import random
-import time
 
 
 class Node:
@@ -34,7 +33,7 @@ class Network:
                 raise ValueError("Error on entry of node to a network. "
                                  "Node label already in the network.")
             else:
-                node_list.append(new_node)
+                self.node_list.append(new_node)
 
     def get_node_by_label(self, node_label):
         for node in self.node_list:
@@ -48,7 +47,7 @@ class Network:
         for node in self.node_list:
             if node.label == node_label:
                 node.circle.undraw()
-                node_list.remove(node)
+                self.node_list.remove(node)
                 found_node = node_label
                 break
         if found_node is None:
@@ -56,18 +55,18 @@ class Network:
         for edge in self.edge_list:
             if found_node == edge.node_a_label or found_node == edge.node_b_label:
                 edge.line.undraw()
-                edge_list.remove(edge)
+                self.edge_list.remove(edge)
 
     def remove_edge_by_labels(self, node_a_label, node_b_label):
         """ Removes the edge that has node_a_label and node_b_label (could be the opposite way around) """
         for edge in self.edge_list:
             if edge.node_a_label == node_a_label and edge.node_b_label == node_b_label:
                 edge.line.undraw()
-                edge_list.remove(edge)
+                self.edge_list.remove(edge)
                 return
             if edge.node_b_label == node_a_label and edge.node_a_label == node_b_label:
                 edge.line.undraw()
-                edge_list.remove(edge)
+                self.edge_list.remove(edge)
                 return
 
     def remove_edge(self, edge_to_remove):
