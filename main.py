@@ -25,7 +25,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-width = 500
+width = 750
 
 # router_label_list = ["0", "1", "2", "3", "4", "5"]
 # link_labels_list = [("0", "1"), ("0", "2"), ("0", "3"), ("2", "1"), ("1", "4")]
@@ -74,7 +74,7 @@ def main():
             while router_a_address == router_b_address:
                 router_a_address = random.choice(list(network.router_dictionary.keys()))
                 router_b_address = random.choice(list(network.router_dictionary.keys()))
-            network.router_dictionary[router_a_address].transport_send(long_str, router_b_address)
+            network.router_dictionary[router_a_address].transport_send("."*random.randint(200,1000), router_b_address)
 
 
 main()
