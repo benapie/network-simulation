@@ -33,7 +33,8 @@ class Edge:
         self.data_waiting = deque()
         self.main_rng = Random()
         self.curr_tick = 0
-        self.callback = None
+        self.packet_callback = None
+        self.queue_callback = None
 
     def send_data_through(self, data, sender: Device):
         num_ticks = self.ticks_for_data_passthrough + self.main_rng.randint(0, 3 * self.ticks_for_data_passthrough)
@@ -41,13 +42,17 @@ class Edge:
             self.change_transit_data(Edge.TransitData(data, self.a if sender != self.a else self.b, num_ticks))
         else:
             self.data_waiting.append(Edge.TransitData(data, self.a if sender != self.a else self.b, num_ticks))
+            self.queue_changed()
 
-    def change_transit_data(self, transit_data: Edge.TransitData):
+    def change_transit_data(self, transit_data: Edge.TransitData = None):
         self.curr_tick = 0
+        if transit_data is None and len(self.data_waiting) != 0:
+            transit_data = self.data_waiting.popleft()
+            self.queue_changed()
         self.data_in_transit = transit_data
-        if self.callback is not None:
-            self.callback((self.a if transit_data.target != self.a else self.b).router.address,
-                          transit_data.target.router.address, transit_data.data.from_addr,  transit_data.num_ticks)
+        if self.packet_callback is not None and self.data_in_transit is not None:
+            self.packet_callback((self.a if transit_data.target != self.a else self.b).router.address,
+                                 transit_data.target.router.address, transit_data.data.from_addr, transit_data.num_ticks)
 
     def tick(self):
         """This will tick an edge along, moving every packet on the edge one
@@ -56,23 +61,23 @@ class Edge:
         if self.data_in_transit is not None:
             self.data_in_transit.data.age += 1
             if self.data_in_transit.data.age > 1000:
-                if len(self.data_waiting) == 0:
-                    self.data_in_transit = None
-                else:
-                    self.change_transit_data(self.data_waiting.popleft())
+                self.change_transit_data()
         if self.data_in_transit is not None and self.data_in_transit.num_ticks == self.curr_tick:
             self.data_in_transit.target.accept_data(self.data_in_transit.data, self)
-            if len(self.data_waiting) == 0:
-                self.data_in_transit = None
-            else:
-                self.change_transit_data(self.data_waiting.popleft())
-
+            self.change_transit_data()
 
     def __str__(self):
         return str(self.a) + " -> " + str(self.b)
 
-    def set_callback(self, callback):
-        self.callback = callback
+    def set_packet_callback(self, callback):
+        self.packet_callback = callback
+
+    def set_queue_callback(self, callback):
+        self.queue_callback = callback
+
+    def queue_changed(self):
+        if self.queue_callback is not None:
+            self.queue_callback(self.a.router.address, self.b.router.address, len(self.data_waiting))
 
 
 class Device:
@@ -86,11 +91,11 @@ class Device:
         self.router = r
 
     def send_data(self, data, target: str):
-        #print("Sending data", data, "to", target)
+        # print("Sending data", data, "to", target)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
-        #print("Received data", data, "from edge", src)
+        # print("Received data", data, "from edge", src)
         self.router.receive_packet(data)
 
     def add_edge(self, edge: Edge, address: str):
@@ -132,8 +137,8 @@ class Router:
         self.packet_queues = {}
 
     def application_receive(self, data):
-        #print(data)
-        #print(self.address)
+        # print(data)
+        # print(self.address)
         pass
 
     def transport_send(self, content: str, to_addr: str):
@@ -287,7 +292,8 @@ class Network:
         Returns:
             Edge -- The Edge object created for this connection."""
         edge = Edge(self.router_dictionary[x].device, self.router_dictionary[y].device, ticks_for_data_passthrough)
-        edge.set_callback(self.update_vis_with_packet)
+        edge.set_packet_callback(self.update_vis_with_packet)
+        edge.set_queue_callback(self.update_vis_with_queues)
         self.edges.append(edge)
         self.router_dictionary[x].register_edge(self.router_dictionary[y], edge)
         self.router_dictionary[y].register_edge(self.router_dictionary[x], edge)
@@ -310,4 +316,5 @@ class Network:
 
     def update_vis_with_queues(self, router_from_address: str, router_to_address: str, queue_length: int):
         """ Updates vis with the number of packets in an edge queue. Pls send a int also edge identified with nodes"""
-        self.vis.update_edge_queue(router_from_address, router_to_address, queue_length)
+        if self.vis is not None:
+            self.vis.update_edge_queue(router_from_address, router_to_address, queue_length)
