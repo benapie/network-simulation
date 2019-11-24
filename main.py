@@ -91,7 +91,8 @@ def main():
                     vis.network.remove_node_by_label(nearest_router)
                     network.delete_router(nearest_router)
             elif key == "d":
-                network.update_vectors()
+                if len(vis.network.node_list) > 1:
+                    network.update_vectors()
             elif key == "Escape":
                 mode_text.setText("")
             elif key == "space":
@@ -115,7 +116,7 @@ def main():
         network.network_tick()
         if frame_count % (frame_rate * 20) == 0:
             network.update_vectors()
-        if frame_count % 30 == 0:
+        if frame_count % 30 == -1:
             router_a_address, router_b_address = "1", "1"
             if len(list(network.router_dictionary.keys())) >= 2:
                 while router_a_address == router_b_address:

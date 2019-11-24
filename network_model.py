@@ -188,7 +188,7 @@ class Router:
     def update_distance_vector(self, dv_packet: Packet):
         """Upon receiving a distance vector from neighbours, each Router updates its vector to contain the most recent
         information regarding the optimum distance to other nodes"""
-        if dv_packet.from_addr in self.device.edges:
+        if dv_packet.from_addr in self.distances:
             for node in dv_packet.data["CONTENT"]:
                 if node not in self.distances:
                     self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
