@@ -199,8 +199,9 @@ class Router:
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
+        # THIS FUNCTION DOESN'T WORK! Every router only knows it's distance from every node
+        # it's neighbours distances from every node for this to work
         if packet.to_addr not in self.distances:
-            print(self.neighbours)
             return random.choice(list(self.neighbours)).address
         if packet.data["HEAD"] == "DV":
             return packet.to_addr
