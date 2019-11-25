@@ -94,6 +94,7 @@ class Device:
 
     def send_data(self, data, target: str):
         # print("Sending data", data, "to", target)
+        print(self.router.address, self.edges)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
@@ -283,6 +284,8 @@ class Network:
             for node in self.router_dictionary[router].to:
                 if self.router_dictionary[node] == addr:
                     to_remove.append(node)
+            if addr in self.router_dictionary[router].device.edges:
+                del self.router_dictionary[router].device.edges[addr]
         for node in to_remove:
             del self.router_dictionary[node]
         edge = 0
