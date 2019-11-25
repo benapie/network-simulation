@@ -94,6 +94,7 @@ class Device:
 
     def send_data(self, data, target: str):
         # print("Sending data", data, "to", target)
+        print(self.edges)
         self.edges[target].send_data_through(data, self)
 
     def accept_data(self, data, src: Edge):
@@ -126,14 +127,13 @@ class Router:
     neighbours: List[Router]
     distances: Dict[str, int]
     address: str
-    to: Dict[str, str]
+    to: Dict[str, List[str]]
     device: Device
 
     def __init__(self, address: str):
         self.neighbours = []
         self.address = address
         self.distances = {self.address: 0}
-        self.to = {}
         self.device = Device()
         self.device.set_router(self)
         self.packet_queues = {}
@@ -144,7 +144,7 @@ class Router:
         pass
 
     def transport_send(self, content: str, to_addr: str):
-        if len(self.to) == 0:
+        if len(self.neighbours) == 0:
             return
         """Splits the content into packets and sends them"""
         # Each packet is of length 255 (§) is added to pad packets of length < 255
@@ -182,7 +182,7 @@ class Router:
 
     def send_distance_vector(self):
         """Sends current distance vector to all neighbours"""
-        if len(self.to) > 0:
+        if len(self.neighbours) > 0:
             for neighbour in self.neighbours:
                 self.send_new_packet(neighbour.address, {"HEAD": "DV", "CONTENT": self.distances, "S_NUM": 0, "NUM_P": 1})
 
@@ -193,17 +193,30 @@ class Router:
             for node in dv_packet.data["CONTENT"]:  # Who would've thought of that glitch?
                 if node not in self.distances:
                     self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
-                    self.to[node] = dv_packet.from_addr
                 else:
                     if self.distances[node] > dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]:
                         self.distances[node] = dv_packet.data["CONTENT"][node] + self.distances[dv_packet.from_addr]
-                        self.to[node] = dv_packet.from_addr
 
     def where_to(self, packet: Packet) -> str:
         """Return where to send the packet."""
-        if packet.to_addr not in self.to:
-            return random.choice(list(self.to.values()))
-        return self.to[packet.to_addr]
+        if packet.to_addr not in self.distances:
+            print(self.neighbours)
+            return random.choice(list(self.neighbours)).address
+        if packet.data["HEAD"] == "DV":
+            return packet.to_addr
+        to = None
+        shortest_distance = 0
+        for address in self.distances:
+            for edge in self.device.edges:
+                if self.device.edges[edge].a.router.address == address or self.device.edges[edge].b.router.address == address:
+                    if to is None:
+                        to = self.device.edges[edge].a.router.address if self.device.edges[edge].a.router.address == address else self.device.edges[edge].b.router.address
+                        shortest_distance = len(self.device.edges[edge].data_waiting) * self.distances[address]
+                    elif shortest_distance > len(self.device.edges[edge].data_waiting) * self.distances[address]:
+                        to = self.device.edges[edge].a.router.address if self.device.edges[edge].a.router.address == address else self.device.edges[edge].b.router.address
+                        shortest_distance = len(self.device.edges[edge].data_waiting) * self.distances[address]
+                    break
+        return to
 
     def receive_packet(self, packet: Packet):
         """Decides what needs to be done with the received packet"""
@@ -225,7 +238,7 @@ class Router:
                 break
         self.distances.pop(packet.from_addr)
         del self.to[to_del]
-        self.to = {to: thru for (to, thru) in self.to.items() if thru != to_del}
+        #self.to = {to: thru for (to, thru) in self.to.items() if thru != to_del}
 
     def register_edge(self, router: Router, edge: Edge):
         """Registers the link between this router to another router."""
@@ -234,7 +247,6 @@ class Router:
         if router.address not in self.distances.keys() or \
                 edge.ticks_for_data_passthrough <= self.distances[router.address]:
             self.distances[router.address] = edge.ticks_for_data_passthrough
-            self.to[router.address] = router.address
         self.send_distance_vector()
 
     def send_del(self):
